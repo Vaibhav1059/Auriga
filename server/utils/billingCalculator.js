@@ -1,11 +1,14 @@
 /**
- * Billing Calculator for TiffinFlow
- * Implements strict weekday-only delivery and pro-rated month-end billing math.
+ * Enterprise Billing Calculator for TiffinFlow
+ * Implements weekday/6-day delivery rules, 9:00 AM same-day cutoff, and GST tax invoicing.
  */
 
-function isWeekday(dateObj) {
+function isDeliveryDay(dateObj, daysPerWeek = 5) {
   const day = dateObj.getDay();
-  return day !== 0 && day !== 6; // 0 = Sunday, 6 = Saturday
+  if (daysPerWeek === 6) {
+    return day !== 0; // Monday through Saturday (Sunday off)
+  }
+  return day !== 0 && day !== 6; // Standard 5-day Mon-Fri (Sat & Sun off)
 }
 
 function formatDate(dateObj) {
@@ -16,75 +19,92 @@ function formatDate(dateObj) {
 }
 
 /**
- * Calculates pro-rated month-end bill for a subscription.
- *
- * @param {Object} params
- * @param {number} params.monthlyPrice - Regular monthly plan cost
- * @param {string} params.billingMonth - 'YYYY-MM' (e.g. '2026-09')
- * @param {string} params.startDate - Subscription start date 'YYYY-MM-DD'
- * @param {Array}  params.pauseLogs - Array of { start_date, end_date, reason }
- * @returns {Object} Pro-rated breakdown and day-by-day calendar
+ * Checks if a same-day pause request has passed the strict 9:00 AM IST cutoff.
  */
-function calculateProratedBill({ monthlyPrice, billingMonth, startDate, pauseLogs = [] }) {
+function evaluateSameDayCutoff(requestedStartDate, currentTime = new Date()) {
+  const todayStr = formatDate(currentTime);
+  if (requestedStartDate === todayStr) {
+    const currentHour = currentTime.getHours();
+    const currentMin = currentTime.getMinutes();
+    const isPastCutoff = currentHour > 9 || (currentHour === 9 && currentMin > 0);
+    return {
+      isSameDay: true,
+      isPastCutoff,
+      cutoffTime: '09:00 AM IST',
+      message: isPastCutoff 
+        ? 'Request passed 9:00 AM cutoff. Same-day lunch is already cooking. Pause will begin tomorrow.'
+        : 'Pause accepted before 9:00 AM cutoff. Same-day lunch canceled.'
+    };
+  }
+  return { isSameDay: false, isPastCutoff: false, message: 'Future date pause accepted.' };
+}
+
+/**
+ * Calculates pro-rated month-end bill with GST breakdown and HSN/SAC code 996331.
+ */
+function calculateProratedBill({ 
+  monthlyPrice, 
+  billingMonth, 
+  startDate, 
+  pauseLogs = [], 
+  daysPerWeek = 5,
+  includeGst = true 
+}) {
   const [yearStr, monthStr] = billingMonth.split('-');
   const year = parseInt(yearStr, 10);
-  const month = parseInt(monthStr, 10); // 1-12
+  const month = parseInt(monthStr, 10);
 
-  // Days in month
   const daysInMonth = new Date(year, month, 0).getDate();
 
-  let totalWeekdaysInMonth = 0;
-  let activeWeekdays = 0;
-  let pausedWeekdays = 0;
-  let beforeStartWeekdays = 0;
+  let totalDeliveryDaysInMonth = 0;
+  let activeDeliveryDays = 0;
+  let pausedDeliveryDays = 0;
+  let beforeStartDays = 0;
   const itemizedDays = [];
 
   const subStartDateStr = startDate || `${yearStr}-${monthStr}-01`;
 
-  // First pass: Count total weekdays in the month for determining the baseline daily rate
+  // First pass: Count total delivery days in the month
   for (let d = 1; d <= daysInMonth; d++) {
     const current = new Date(year, month - 1, d);
-    if (isWeekday(current)) {
-      totalWeekdaysInMonth++;
+    if (isDeliveryDay(current, daysPerWeek)) {
+      totalDeliveryDaysInMonth++;
     }
   }
 
-  // Daily weekday rate: monthly price divided by total weekdays in this month
-  const dailyRate = totalWeekdaysInMonth > 0 ? (monthlyPrice / totalWeekdaysInMonth) : 0;
+  // Daily rate
+  const dailyRate = totalDeliveryDaysInMonth > 0 ? (monthlyPrice / totalDeliveryDaysInMonth) : 0;
 
-  // Second pass: Categorize each day of the month
+  // Second pass: Categorize each day
   for (let d = 1; d <= daysInMonth; d++) {
     const current = new Date(year, month - 1, d);
     const dateStr = formatDate(current);
-    const weekday = isWeekday(current);
+    const deliveryDay = isDeliveryDay(current, daysPerWeek);
     const dayName = current.toLocaleDateString('en-US', { weekday: 'short' });
 
     let status = 'DELIVERED';
     let charge = dailyRate;
     let reason = null;
 
-    if (!weekday) {
+    if (!deliveryDay) {
       status = 'WEEKEND';
       charge = 0;
     } else if (dateStr < subStartDateStr) {
       status = 'NOT_STARTED';
       charge = 0;
-      beforeStartWeekdays++;
+      beforeStartDays++;
     } else {
-      // Check if paused on this date
-      const activePause = pauseLogs.find(p => {
-        return dateStr >= p.start_date && dateStr <= p.end_date;
-      });
+      const activePause = pauseLogs.find(p => dateStr >= p.start_date && dateStr <= p.end_date);
 
       if (activePause) {
         status = 'PAUSED';
         charge = 0;
-        reason = activePause.reason || 'Customer Requested Pause';
-        pausedWeekdays++;
+        reason = activePause.reason || 'Leave requested';
+        pausedDeliveryDays++;
       } else {
         status = 'DELIVERED';
         charge = dailyRate;
-        activeWeekdays++;
+        activeDeliveryDays++;
       }
     }
 
@@ -92,32 +112,59 @@ function calculateProratedBill({ monthlyPrice, billingMonth, startDate, pauseLog
       date: dateStr,
       day: d,
       dayName,
-      isWeekday: weekday,
+      isDeliveryDay: deliveryDay,
       status,
       charge: parseFloat(charge.toFixed(2)),
       reason
     });
   }
 
-  const finalAmount = parseFloat((activeWeekdays * dailyRate).toFixed(2));
-  const fullMonthSavings = parseFloat((pausedWeekdays * dailyRate).toFixed(2));
+  const taxableAmount = parseFloat((activeDeliveryDays * dailyRate).toFixed(2));
+  const fullMonthSavings = parseFloat((pausedDeliveryDays * dailyRate).toFixed(2));
+
+  // GST 5% (2.5% CGST + 2.5% SGST) for outdoor catering / tiffin services
+  const cgstRate = 0.025;
+  const sgstRate = 0.025;
+  const cgst = includeGst ? parseFloat((taxableAmount * cgstRate).toFixed(2)) : 0;
+  const sgst = includeGst ? parseFloat((taxableAmount * sgstRate).toFixed(2)) : 0;
+  const totalWithGst = parseFloat((taxableAmount + cgst + sgst).toFixed(2));
 
   return {
     billingMonth,
     monthlyPrice: parseFloat(monthlyPrice.toFixed(2)),
     dailyRate: parseFloat(dailyRate.toFixed(2)),
-    totalWeekdaysInMonth,
-    deliveredDays: activeWeekdays,
-    pausedDays: pausedWeekdays,
-    beforeStartDays: beforeStartWeekdays,
-    finalAmount,
+    daysPerWeek,
+    totalWeekdaysInMonth: totalDeliveryDaysInMonth,
+    deliveredDays: activeDeliveryDays,
+    pausedDays: pausedDeliveryDays,
+    beforeStartDays,
+    taxableAmount,
+    cgst,
+    sgst,
+    gstRatePercent: 5.0,
+    hsnSacCode: '996331',
+    finalAmount: totalWithGst,
     savingsForCustomer: fullMonthSavings,
     itemizedDays
   };
 }
 
+function getTodayISTString(date = new Date()) {
+  return formatDate(date);
+}
+
+function isPastCutoff(time = new Date()) {
+  const currentHour = time.getHours();
+  const currentMin = time.getMinutes();
+  return currentHour > 9 || (currentHour === 9 && currentMin > 0);
+}
+
 module.exports = {
-  isWeekday,
+  isDeliveryDay,
+  isWeekday: (d) => isDeliveryDay(d, 5),
   formatDate,
+  getTodayISTString,
+  isPastCutoff,
+  evaluateSameDayCutoff,
   calculateProratedBill
 };

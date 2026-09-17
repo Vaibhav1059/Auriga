@@ -1,7 +1,8 @@
-# 🍱 TiffinFlow — Smart Pro-Rated Tiffin Subscription & Kitchen Dispatch System
+# 🍱 TiffinFlow — Enterprise Pro-Rated Tiffin SaaS & Kitchen Dispatch System
 
 > **Round 2 "Builder" Submission**  
 > **Problem Assignment:** `tiffin_subscription`  
+> **Enterprise Tenant:** Rajeshwar Annapurna Tiffin Kitchens (GSTIN: `08AABCR1234F1Z5`)  
 > **Repository:** [https://github.com/Vaibhav1059/Auriga](https://github.com/Vaibhav1059/Auriga)
 
 ---
@@ -11,11 +12,12 @@
 ### The Storyline & The Twist
 A home-style tiffin (lunch delivery) service operates on a monthly subscription model where meals are delivered every weekday (Monday through Friday). In real life:
 - Customers frequently **pause** deliveries for travel, weddings, or festivals.
-- Customers **must not be charged** for days they were paused.
-- At month-end, the owner needs an itemized bill pro-rated strictly for the days actually delivered.
-- The owner looks up customers quickly by **phone number** and needs to see who is **active versus paused** each morning.
+- Customers **must strictly not be charged** for days they were paused.
+- At month-end, the kitchen needs an itemized tax invoice pro-rated strictly for the days actually delivered with **5% GST (SAC 996331)**.
+- The owner looks up customers instantaneously by **phone number** and verifies morning active vs paused meal prep counts.
+- **Strict 9:00 AM Morning Cutoff:** Same-day pause requests received after 9:00 AM IST cannot cancel today's meal (kitchen is already cooking); the pause activates starting the next business day.
 
-**TiffinFlow** solves this end-to-end with an automated pro-rated billing math engine, real SQLite persistence, phone lookup, live morning kitchen dispatch, and a modern reactive UI.
+**TiffinFlow** elevates this from a simple prototype to an enterprise production SaaS platform featuring **Multi-Tenancy**, **KDS (Kitchen Display System) TV Mode**, **Driver Route Optimization**, **WhatsApp Cloud API Bot Simulator**, and **Immutable Audit Logs**.
 
 ---
 
@@ -38,6 +40,8 @@ This repository is configured for zero-friction execution in **GitHub Codespaces
 5. **Default Pre-Seeded Owner Credentials:**
    - **Email:** `admin@tiffinflow.com`
    - **Password:** `admin123`
+6. **Instant Standalone Browser Demo:**
+   - Open [`preview.html`](preview.html) in any web browser for a zero-dependency, full-featured interactive experience.
 
 ---
 
@@ -75,110 +79,103 @@ The server will now serve both the REST API and the frontend at `http://localhos
 
 ## 🧪 Running Automated Tests
 
-Run the unit test suite verifying weekday calculations, pause exclusions, and mathematical pro-rating accuracy:
+Run the complete 8-test unit test suite verifying weekday calculations, 6-day corporate plans, 9:00 AM same-day cutoff evaluation, and GST tax invoicing:
 ```bash
 npm test
 ```
 
----
-
-## 🛠️ Debugging & Troubleshooting
-
-| Issue | Cause | Solution |
-| :--- | :--- | :--- |
-| **Port 5000 or 5173 already in use** | A dangling process is occupying the port | Change `PORT=5001` in `server/config.js` or kill the process: `npx kill-port 5000 5173` |
-| **Reset Database to Default State** | Want to restore initial mock data | Run `npm run seed` in the terminal to reset the SQLite database. |
-| **CORS / API Network Error** | Frontend cannot reach backend | Vite dev server automatically proxies `/api` calls to `http://localhost:5000`. Ensure backend is running. |
+### Test Suite Coverage:
+- `Test 1`: Weekday / Weekend identification and 6-day (Mon-Sat) delivery check.
+- `Test 2`: Full month zero-pause baseline with 5% GST (2.5% CGST + 2.5% SGST).
+- `Test 3`: 5-weekday pause pro-rated discount calculation.
+- `Test 4`: Pause period spanning across a weekend (ensures weekends are not double-deducted).
+- `Test 5`: Mid-month subscription start pro-rating.
+- `Test 6`: 6-day corporate plan delivery day verification.
+- `Test 7`: Strict 9:00 AM IST cutoff policy evaluation.
+- `Test 8`: GST HSN/SAC 996331 invoice and tax split validation.
 
 ---
 
 ## 📋 REST API Reference
 
-All core operations are exposed via standard RESTful JSON APIs:
+All operations are exposed via standard RESTful JSON APIs:
 
-### 1. Authentication
+### 1. Authentication & Multi-Tenancy
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Register new owner/kitchen account | No |
+| `POST` | `/api/auth/register` | Register new owner/kitchen enterprise | No |
 | `POST` | `/api/auth/login` | Login with email & password (returns JWT) | No |
-| `GET` | `/api/auth/me` | Fetch current user profile | Yes (Bearer) |
-
-#### Example Login Request:
-```bash
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email": "admin@tiffinflow.com", "password": "admin123"}'
-```
+| `GET` | `/api/auth/me` | Fetch current user profile & tenant info | Yes (Bearer) |
 
 ### 2. Plans & Subscriptions
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/plans` | List all available monthly meal plans | No |
+| `GET` | `/api/plans` | List all available monthly meal plans (5-day & 6-day) | No |
 | `POST` | `/api/plans` | Create a new monthly meal plan | Yes |
 | `GET` | `/api/subscriptions/stats` | Get dashboard summary KPIs & counts | No |
 | `GET` | `/api/subscriptions/dispatch` | Morning kitchen dispatch board (`?date=YYYY-MM-DD`) | No |
 | `POST` | `/api/subscriptions` | Subscribe a customer to a plan | Yes |
-| `POST` | `/api/subscriptions/:id/pause` | Pause subscription for date range | Yes |
+| `POST` | `/api/subscriptions/:id/pause` | Pause subscription for date range (evaluates 9 AM cutoff) | Yes |
 | `POST` | `/api/subscriptions/:id/resume` | Resume subscription to Active | Yes |
-
-#### Example Pause Subscription Request:
-```bash
-curl -X POST http://localhost:5000/api/subscriptions/1/pause \
-  -H "Authorization: Bearer <TOKEN>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "start_date": "2026-09-14",
-    "end_date": "2026-09-18",
-    "reason": "Diwali Festival Holiday"
-  }'
-```
 
 ### 3. Customers & Instant Phone Lookup
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/customers/lookup?phone=...` | **Instant Phone Search** (returns sub & pause status) | No |
-| `GET` | `/api/customers` | List customers with `search`, `sortBy`, `order`, `page`, `limit` | No |
+| `GET` | `/api/customers` | List customers with `search`, `locality`, `status`, `page` | No |
 | `GET` | `/api/customers/:id` | Customer profile, active plan, pause logs | No |
 | `POST` | `/api/customers` | Register a new customer | Yes |
 
-#### Example Phone Lookup Request:
-```bash
-curl "http://localhost:5000/api/customers/lookup?phone=9829012345"
-```
-
-### 4. Pro-Rated Billing Engine
+### 4. Pro-Rated Billing Engine (GST & SAC 996331)
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/billing/calculate/:subId?month=YYYY-MM` | Compute exact pro-rated bill & itemized days | No |
-| `POST` | `/api/billing/generate-invoice` | Persist month-end pro-rated invoice | Yes |
+| `GET` | `/api/billing/calculate/:subId?month=YYYY-MM` | Compute exact pro-rated bill & tax breakdown | No |
+| `POST` | `/api/billing/generate-invoice` | Persist month-end official tax invoice | Yes |
 | `GET` | `/api/billing/invoices` | List historical month-end invoices | No |
-| `POST` | `/api/billing/invoices/:id/pay` | Mark invoice as paid | Yes |
+| `POST` | `/api/billing/invoices/:id/pay` | Mark invoice as paid / reconciled | Yes |
 
-#### Example Bill Calculation Request:
-```bash
-curl "http://localhost:5000/api/billing/calculate/1?month=2026-09"
-```
+### 5. Enterprise Operations (KDS, Driver Routes, Audit Logs)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/operations/kds` | Live KDS feed: meal counters, tiers, dietary alerts, cutoff lock | No |
+| `GET` | `/api/operations/driver-route` | Clustered active delivery stops (skips paused homes) | No |
+| `POST` | `/api/operations/driver-route/:id/status` | Update delivery drop status (`DELIVERED`, `DOORBELL_RUNG`) | No |
+| `GET` | `/api/operations/audit-logs` | Retrieve paginated immutable audit log events | No |
+
+### 6. Meta WhatsApp Cloud API & Webhooks
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/webhooks/whatsapp` | Webhook receiver for customer commands: `PAUSE`, `RESUME`, `MENU`, `BILL` | No |
+| `POST` | `/api/webhooks/payment` | AutoPay / UPI payment reconciliation webhook | No |
 
 ---
 
-## 🗄️ Database Schema (SQLite)
+## 🗄️ Database Schema (SQLite with WAL Mode)
 
-- `users`: Owner credentials, password hash (bcrypt), role, timestamps.
-- `plans`: Monthly price, meal type (Veg, Jain, High-Protein), description.
-- `customers`: Name, indexed phone number, email, delivery address, dietary notes.
-- `subscriptions`: Foreign keys to `customers` & `plans`, start date, status (`ACTIVE`, `PAUSED`).
-- `pause_logs`: Date range (`start_date` to `end_date`), reason, status.
-- `invoices`: Month-end invoice, total weekdays, delivered days, paused days, daily rate, final payable amount.
+- `tenants`: Enterprise isolation (`name`, `slug`, `gstin`, `phone`, `address`).
+- `users`: Credentials, password hash (bcrypt), role (`super_admin`, `owner`, `cook`, `driver`).
+- `plans`: Monthly price, meal type (`Veg`, `Jain`, `Diet/High-Protein`), tier (`STANDARD`, `DELUXE`, `MINI`), `delivery_days_per_week` (5 or 6).
+- `customers`: Name, indexed phone number, email, locality (`Malviya Nagar`, `Sitapura`, etc.), address, dietary notes.
+- `subscriptions`: Foreign keys to `customers` & `plans`, start date, status (`ACTIVE`, `PAUSED`, `CANCELLED`).
+- `pause_logs`: Date range (`start_date` to `end_date`), reason, `requested_via` (`DASHBOARD`, `WHATSAPP_BOT`), status.
+- `invoices`: Month-end tax invoice, `taxable_amount`, `cgst` (2.5%), `sgst` (2.5%), `total_amount`, HSN/SAC `996331`.
+- `delivery_runs`: Driver stops, delivery date, status (`PENDING`, `DELIVERED`, `DOORBELL_RUNG`, `FAILED`), timestamps.
+- `audit_logs`: Immutable security log (`actor_name`, `actor_role`, `action`, `entity_type`, `entity_id`, `details`, `ip_address`, `timestamp`).
+- `idempotency_keys`: Prevents accidental duplicate pause or billing requests.
 
 ---
 
 ## 📊 Evaluation Criteria Compliance Matrix
 
-- [x] **Database:** Real persistence with SQLite, relations, auto-seeding.
-- [x] **REST APIs:** Fully implemented and documented above.
-- [x] **Usable UI:** Modern dark glassmorphism, responsive, interactive modals.
-- [x] **User Auth:** JWT authentication with bcrypt password hashing.
-- [x] **Search:** Phone lookup endpoint + full-text search with debounce.
+- [x] **Database:** Real relational persistence with SQLite (WAL mode, foreign keys, indexes, auto-seed).
+- [x] **REST APIs:** Fully implemented across auth, subscriptions, billing, operations, and webhooks.
+- [x] **Usable UI:** Modern dark glassmorphism + Light Mode toggle, responsive, interactive modals.
+- [x] **User Auth:** Role-based JWT authentication with bcrypt password hashing.
+- [x] **Search:** Instant phone lookup endpoint + full-text search with debounce & locality filters.
 - [x] **Landing Page:** 5 mandatory sections (What it is, Key features, Target audience, How it helps, 3 future features).
 - [x] **Pagination & Sorting:** Multi-column sorting and page limit controls.
+- [x] **KDS TV Screen:** Live prep counters, 9 AM cutoff lock, and critical allergy alert stream.
+- [x] **Driver Routes:** Locality clustering, auto-skip paused homes, 1-tap Google Maps navigation.
+- [x] **WhatsApp Cloud Bot:** Interactive simulator supporting `MENU`, `PAUSE`, `RESUME`, `BILL`.
+- [x] **Audit Trail:** Immutable enterprise event logs.
 - [x] **Root Files:** `README.md`, `REASONING.md`, `AI_LOGS.md` present in root.

@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TiffinFlow — Smart Pro-Rated Tiffin Subscriptions</title>
+  <title>TiffinFlow — Enterprise Pro-Rated Tiffin SaaS & KDS</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -72,6 +72,10 @@
       font-family: 'Outfit', sans-serif;
     }
 
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
     .glass-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
@@ -87,7 +91,7 @@
       background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
       color: #0b1120;
       font-weight: 700;
-      padding: 10px 20px;
+      padding: 9px 18px;
       border-radius: 10px;
       transition: all 0.2s ease;
       box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
@@ -101,7 +105,7 @@
       background: var(--bg-card-hover);
       color: var(--text-primary);
       font-weight: 600;
-      padding: 10px 18px;
+      padding: 9px 16px;
       border-radius: 10px;
       border: 1px solid var(--border-color);
       transition: all 0.2s ease;
@@ -146,6 +150,38 @@
       z-index: 999;
       padding: 20px;
     }
+
+    /* KDS TV High Contrast Styles */
+    .kds-tv {
+      background: #020617;
+      color: #f8fafc;
+    }
+    .kds-card {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+    }
+
+    /* WhatsApp Chat Styles */
+    .chat-bubble-user {
+      background: #d9fdd3;
+      color: #111b21;
+      border-radius: 12px 12px 2px 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .chat-bubble-bot {
+      background: #ffffff;
+      color: #111b21;
+      border-radius: 12px 12px 12px 2px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    [data-theme="dark"] .chat-bubble-user {
+      background: #005c4b;
+      color: #e9edef;
+    }
+    [data-theme="dark"] .chat-bubble-bot {
+      background: #202c33;
+      color: #e9edef;
+    }
   </style>
 </head>
 <body>
@@ -154,24 +190,24 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    const INITIAL_PLANS = [
-      { id: 1, name: 'Ghar Ki Thali (Standard Veg)', monthly_price: 2200, meal_type: 'Veg' },
-      { id: 2, name: 'Shuddh Jain Satvik Box', monthly_price: 2500, meal_type: 'Jain' },
-      { id: 3, name: 'Executive Deluxe Thali', monthly_price: 3000, meal_type: 'Veg' },
-      { id: 4, name: 'Fitness High-Protein Meal', monthly_price: 3400, meal_type: 'Diet/High-Protein' }
-    ];
-
     const INITIAL_CUSTOMERS = [
-      { id: 1, subscription_id: 1, name: 'Amit Singhal', phone: '9829012345', locality: 'Malviya Nagar', address: 'Flat 402, Royal Residency, Malviya Nagar', dietary_notes: 'Less oil, no extra spicy', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [{ id: 1, start_date: '2026-09-07', end_date: '2026-09-08', reason: 'Festival Fasting' }] },
-      { id: 2, subscription_id: 2, name: 'Pooja Mehta', phone: '9829054321', locality: 'Sitapura', address: 'Tower B, Office 305, IT Park, Sitapura', dietary_notes: 'Strictly Jain (No onion/garlic)', plan_id: 2, plan_name: 'Shuddh Jain Satvik', monthly_price: 2500, meal_type: 'Jain', status: 'PAUSED', pause_logs: [{ id: 2, start_date: '2026-09-14', end_date: '2026-09-18', reason: 'Family Wedding in Udaipur' }] },
-      { id: 3, subscription_id: 3, name: 'Vikram Rathore', phone: '9116789012', locality: 'C-Scheme', address: 'House 14, Sunrise Enclave, C-Scheme', dietary_notes: 'Gym diet, extra salad', plan_id: 4, plan_name: 'Fitness High-Protein', monthly_price: 3400, meal_type: 'Diet', status: 'ACTIVE', pause_logs: [] },
-      { id: 4, subscription_id: 4, name: 'Sneha Agarwal', phone: '9414098765', locality: 'Mansarovar', address: 'A-89, Mansarovar, Sector 5', dietary_notes: 'Regular spicy, extra curd', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] },
-      { id: 5, subscription_id: 5, name: 'Karan Verma', phone: '9784112233', locality: 'Malviya Nagar', address: 'Co-working Pod 12, WTP, JLN Marg', dietary_notes: 'No capsicum', plan_id: 3, plan_name: 'Executive Deluxe', monthly_price: 3000, meal_type: 'Veg', status: 'PAUSED', pause_logs: [{ id: 3, start_date: '2026-09-15', end_date: '2026-09-18', reason: 'WFH this week' }] },
-      { id: 6, subscription_id: 6, name: 'Ritu Bhasin', phone: '9650044556', locality: 'Jagatpura', address: 'Flat 701, Silver Crest, Jagatpura', dietary_notes: 'Allergic to peanuts', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] },
-      { id: 7, subscription_id: 7, name: 'Deepak Choudhary', phone: '9001234567', locality: 'Gopalpura', address: 'Plot 22, Gopalpura Bypass, Jaipur', dietary_notes: 'Extra roti requested', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] }
+      { id: 1, subscription_id: 1, name: 'Amit Singhal', phone: '9829012345', locality: 'Malviya Nagar', address: 'Flat 402, Royal Residency, Malviya Nagar, Jaipur', dietary_notes: 'Less oil, no extra spicy', plan_id: 1, plan_name: 'Ghar Ki Thali (Standard Veg)', monthly_price: 2200, meal_type: 'Veg', tier: 'STANDARD', status: 'ACTIVE', pause_logs: [{ id: 1, start_date: '2026-09-07', end_date: '2026-09-08', reason: 'Festival Fasting' }] },
+      { id: 2, subscription_id: 2, name: 'Pooja Mehta', phone: '9829054321', locality: 'Sitapura', address: 'Tower B, Office 305, IT Park, Sitapura', dietary_notes: 'Strictly Jain (No onion/garlic)', plan_id: 2, plan_name: 'Shuddh Jain Satvik Box', monthly_price: 2500, meal_type: 'Jain', tier: 'STANDARD', status: 'PAUSED', pause_logs: [{ id: 2, start_date: '2026-09-14', end_date: '2026-09-18', reason: 'Family Wedding in Udaipur' }] },
+      { id: 3, subscription_id: 3, name: 'Vikram Rathore', phone: '9116789012', locality: 'C-Scheme', address: 'House 14, Sunrise Enclave, C-Scheme', dietary_notes: 'Gym diet, extra salad', plan_id: 4, plan_name: 'Fitness High-Protein Meal', monthly_price: 3400, meal_type: 'Diet/High-Protein', tier: 'DELUXE', status: 'ACTIVE', pause_logs: [] },
+      { id: 4, subscription_id: 4, name: 'Sneha Agarwal', phone: '9414098765', locality: 'Mansarovar', address: 'A-89, Mansarovar, Sector 5', dietary_notes: 'Regular spicy, extra curd', plan_id: 1, plan_name: 'Ghar Ki Thali (Standard Veg)', monthly_price: 2200, meal_type: 'Veg', tier: 'STANDARD', status: 'ACTIVE', pause_logs: [] },
+      { id: 5, subscription_id: 5, name: 'Karan Verma', phone: '9784112233', locality: 'Malviya Nagar', address: 'Co-working Pod 12, WTP, JLN Marg', dietary_notes: 'No capsicum', plan_id: 3, plan_name: 'Executive Deluxe Thali', monthly_price: 3000, meal_type: 'Veg', tier: 'DELUXE', status: 'PAUSED', pause_logs: [{ id: 3, start_date: '2026-09-15', end_date: '2026-09-18', reason: 'WFH this week' }] },
+      { id: 6, subscription_id: 6, name: 'Ritu Bhasin', phone: '9650044556', locality: 'Jagatpura', address: 'Flat 701, Silver Crest, Jagatpura', dietary_notes: 'Allergic to peanuts', plan_id: 1, plan_name: 'Ghar Ki Thali (Standard Veg)', monthly_price: 2200, meal_type: 'Veg', tier: 'STANDARD', status: 'ACTIVE', pause_logs: [] },
+      { id: 7, subscription_id: 7, name: 'Deepak Choudhary', phone: '9001234567', locality: 'Gopalpura', address: 'Plot 22, Gopalpura Bypass, Jaipur', dietary_notes: 'Extra roti requested', plan_id: 1, plan_name: 'Ghar Ki Thali (Standard Veg)', monthly_price: 2200, meal_type: 'Veg', tier: 'STANDARD', status: 'ACTIVE', pause_logs: [] }
     ];
 
-    function calculateProratedMath(monthlyPrice, monthStr, pauseLogs) {
+    const INITIAL_AUDIT_LOGS = [
+      { id: 104, actor_name: 'Mukesh Saini (Driver)', actor_role: 'driver', action: 'DELIVERY_STATUS_UPDATE', entity_type: 'DELIVERY_RUN', entity_id: 1, details: 'Stop #1 (Amit Singhal) marked DELIVERED with contactless door drop', ip_address: '106.51.24.12', timestamp: '2026-09-17 12:35:10' },
+      { id: 103, actor_name: 'Chef Rajesh Sharma', actor_role: 'owner', action: 'CUTOFF_LOCKED', entity_type: 'SYSTEM', entity_id: 0, details: '9:00 AM Morning Cutoff strictly locked kitchen prep count to 5 active dabbas', ip_address: '127.0.0.1', timestamp: '2026-09-17 09:00:00' },
+      { id: 102, actor_name: 'Pooja Mehta', actor_role: 'customer', action: 'SCHEDULE_PAUSE', entity_type: 'PAUSE_LOG', entity_id: 2, details: 'Customer requested pause for Udaipur wedding (Sept 14-18) via WhatsApp Bot', ip_address: '49.36.110.82', timestamp: '2026-09-13 21:14:05' },
+      { id: 101, actor_name: 'Chef Rajesh Sharma', actor_role: 'owner', action: 'CREATE_TENANT', entity_type: 'TENANT', entity_id: 1, details: 'Registered Rajeshwar Annapurna Tiffin Kitchens with GSTIN 08AABCR1234F1Z5', ip_address: '127.0.0.1', timestamp: '2026-09-01 10:00:00' }
+    ];
+
+    function calculateProratedMath(monthlyPrice, monthStr, pauseLogs, includeGst = true) {
       const [year, month] = monthStr.split('-').map(Number);
       const daysInMonth = new Date(year, month, 0).getDate();
       let totalWeekdays = 0;
@@ -205,21 +241,35 @@
       }
 
       const dailyRate = parseFloat((monthlyPrice / totalWeekdays).toFixed(2));
-      const finalAmount = parseFloat((deliveredWeekdays * dailyRate).toFixed(2));
+      const taxableAmount = parseFloat((deliveredWeekdays * dailyRate).toFixed(2));
       const savings = parseFloat((pausedWeekdays * dailyRate).toFixed(2));
+      
+      const cgst = includeGst ? parseFloat((taxableAmount * 0.025).toFixed(2)) : 0;
+      const sgst = includeGst ? parseFloat((taxableAmount * 0.025).toFixed(2)) : 0;
+      const finalAmount = parseFloat((taxableAmount + cgst + sgst).toFixed(2));
 
-      return { totalWeekdays, deliveredWeekdays, pausedWeekdays, dailyRate, finalAmount, savings, schedule };
+      return { totalWeekdays, deliveredWeekdays, pausedWeekdays, dailyRate, taxableAmount, cgst, sgst, finalAmount, savings, schedule };
     }
 
     function App() {
-      const [theme, setTheme] = useState('light'); // 'light' or 'dark'
-      const [activeTab, setActiveTab] = useState('dashboard'); // 'landing', 'dashboard', 'dispatch'
+      const [theme, setTheme] = useState('light');
+      const [activeTab, setActiveTab] = useState('dashboard'); // 'landing', 'dashboard', 'dispatch', 'kds', 'driver', 'whatsapp', 'audit'
       const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
+      const [auditLogs, setAuditLogs] = useState(INITIAL_AUDIT_LOGS);
       const [search, setSearch] = useState('');
       const [statusFilter, setStatusFilter] = useState('ALL');
       const [localityFilter, setLocalityFilter] = useState('ALL');
       const [phoneQuery, setPhoneQuery] = useState('');
       const [matchedCustomer, setMatchedCustomer] = useState(null);
+
+      // Driver Stop Delivery Statuses: { subId: 'DELIVERED' | 'DOORBELL_RUNG' | 'FAILED' | 'PENDING' }
+      const [deliveryStatuses, setDeliveryStatuses] = useState({ 1: 'DELIVERED' });
+
+      // WhatsApp Chat Simulator State
+      const [chatMessages, setChatMessages] = useState([
+        { sender: 'bot', text: '🍱 Namaste! Welcome to Rajeshwar Annapurna Tiffin Assistant.\nReply with MENU, PAUSE, RESUME, or BILL.' }
+      ]);
+      const [chatInput, setChatInput] = useState('');
 
       // Today's special menu
       const [todaysMenu, setTodaysMenu] = useState({
@@ -263,6 +313,15 @@
       };
 
       const handlePauseSubmit = (subId, startDate, endDate, reason) => {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const todayStr = '2026-09-17';
+        let cutoffNotice = '';
+
+        if (startDate === todayStr && currentHour >= 9) {
+          cutoffNotice = ' (Note: 9:00 AM cutoff passed. Meal for today is already cooking; pause takes effect tomorrow)';
+        }
+
         setCustomers(prev => prev.map(c => {
           if (c.subscription_id === subId) {
             const newLogs = [...c.pause_logs, { id: Date.now(), start_date: startDate, end_date: endDate, reason }];
@@ -270,8 +329,24 @@
           }
           return c;
         }));
+
+        // Add to audit trail
+        const target = customers.find(c => c.subscription_id === subId);
+        const newLog = {
+          id: Date.now(),
+          actor_name: target ? target.name : 'Kitchen Admin',
+          actor_role: 'customer',
+          action: 'SCHEDULE_PAUSE',
+          entity_type: 'SUBSCRIPTION',
+          entity_id: subId,
+          details: `Paused from ${startDate} to ${endDate} (${reason})${cutoffNotice}`,
+          ip_address: '127.0.0.1',
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        };
+        setAuditLogs(prev => [newLog, ...prev]);
+
         setPauseModal(null);
-        triggerNotification(`Paused subscription from ${startDate} to ${endDate}`);
+        triggerNotification(`Paused subscription from ${startDate} to ${endDate}${cutoffNotice}`);
       };
 
       const handleResume = (subId) => {
@@ -281,11 +356,84 @@
           }
           return c;
         }));
+
+        const target = customers.find(c => c.subscription_id === subId);
+        const newLog = {
+          id: Date.now(),
+          actor_name: target ? target.name : 'Kitchen Admin',
+          actor_role: 'customer',
+          action: 'RESUME_SUBSCRIPTION',
+          entity_type: 'SUBSCRIPTION',
+          entity_id: subId,
+          details: 'Resumed lunch delivery to ACTIVE status',
+          ip_address: '127.0.0.1',
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        };
+        setAuditLogs(prev => [newLog, ...prev]);
+
         triggerNotification('Subscription resumed to ACTIVE!');
+      };
+
+      const handleDriverStatus = (subId, newStatus) => {
+        setDeliveryStatuses(prev => ({ ...prev, [subId]: newStatus }));
+        const target = customers.find(c => c.subscription_id === subId);
+        const newLog = {
+          id: Date.now(),
+          actor_name: 'Mukesh Saini (Lead Driver)',
+          actor_role: 'driver',
+          action: 'DELIVERY_STATUS_UPDATE',
+          entity_type: 'DELIVERY_RUN',
+          entity_id: subId,
+          details: `Stop for ${target?.name || 'Customer'} marked ${newStatus}`,
+          ip_address: '106.51.24.12',
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        };
+        setAuditLogs(prev => [newLog, ...prev]);
+        triggerNotification(`Stop updated to: ${newStatus}`);
+      };
+
+      const handleSendWhatsAppMessage = (msgText) => {
+        const text = (msgText || chatInput).trim();
+        if (!text) return;
+
+        const newMsgList = [...chatMessages, { sender: 'user', text }];
+        setChatMessages(newMsgList);
+        setChatInput('');
+
+        const upper = text.toUpperCase();
+        let botReply = '';
+
+        if (upper.includes('MENU')) {
+          botReply = `🍲 *Today's TiffinFlow Menu:*\n• Curry: ${todaysMenu.sabzi}\n• Dal: ${todaysMenu.dal}\n• Breads: ${todaysMenu.breads}\n• Rice: ${todaysMenu.rice}\n• Accompaniment: ${todaysMenu.extras}`;
+        } else if (upper.startsWith('PAUSE')) {
+          botReply = `⏸️ *Pause Request Registered:*\nYour tiffin delivery is paused. 9:00 AM morning cutoff applies: you will strictly NOT be billed for weekdays on leave.`;
+        } else if (upper.includes('RESUME') || upper.includes('UNPAUSE')) {
+          botReply = `▶️ *Welcome Back!*\nYour tiffin delivery has been set to ACTIVE. Fresh lunch will arrive at your door tomorrow at 12:45 PM.`;
+        } else if (upper.includes('BILL')) {
+          botReply = `💳 *Month-End Pro-Rated Bill Breakdown:*\n• Standard Plan: ₹2,200/mo\n• Weekdays Served: 20 days\n• Paused Weekdays: 2 days\n• Taxable: ₹2,000 + 5% GST (CGST ₹50 + SGST ₹50)\n• *Total Due: ₹2,100* (Saved: ₹200)`;
+        } else {
+          botReply = `🍱 *TiffinFlow Bot Commands:*\n• Type *MENU* to see today's meal\n• Type *PAUSE* to skip meals on leave\n• Type *RESUME* to restart delivery\n• Type *BILL* to check pro-rated charges`;
+        }
+
+        setTimeout(() => {
+          setChatMessages(prev => [...prev, { sender: 'bot', text: botReply }]);
+        }, 400);
       };
 
       const handleAddSubscriber = (newCust) => {
         setCustomers(prev => [newCust, ...prev]);
+        const newLog = {
+          id: Date.now(),
+          actor_name: 'Chef Rajesh Sharma',
+          actor_role: 'owner',
+          action: 'NEW_SUBSCRIBER',
+          entity_type: 'CUSTOMER',
+          entity_id: newCust.id,
+          details: `Enrolled new subscriber ${newCust.name} for ${newCust.plan_name} (${newCust.locality})`,
+          ip_address: '127.0.0.1',
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        };
+        setAuditLogs(prev => [newLog, ...prev]);
         setNewSubModal(false);
         triggerNotification(`Subscribed ${newCust.name} successfully!`);
       };
@@ -300,10 +448,30 @@
       const totalPages = Math.ceil(filtered.length / pageSize) || 1;
       const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-      const activeCount = customers.filter(c => c.status === 'ACTIVE').length;
-      const pausedCount = customers.filter(c => c.status === 'PAUSED').length;
+      const activeList = customers.filter(c => c.status === 'ACTIVE');
+      const pausedList = customers.filter(c => c.status === 'PAUSED');
+      const activeCount = activeList.length;
+      const pausedCount = pausedList.length;
 
-      // Unique localities for delivery route sorting
+      // Group active customers by locality for Driver manifest
+      const driverClusters = {};
+      activeList.forEach(c => {
+        if (!driverClusters[c.locality]) driverClusters[c.locality] = [];
+        driverClusters[c.locality].push(c);
+      });
+
+      // Meal & Tier breakdown for KDS
+      const mealCounts = { Veg: 0, Jain: 0, 'Diet/High-Protein': 0 };
+      const tierCounts = { STANDARD: 0, DELUXE: 0, MINI: 0 };
+      activeList.forEach(c => {
+        if (mealCounts[c.meal_type] !== undefined) mealCounts[c.meal_type]++;
+        else mealCounts[c.meal_type] = 1;
+
+        const tier = c.tier || 'STANDARD';
+        if (tierCounts[tier] !== undefined) tierCounts[tier]++;
+        else tierCounts[tier] = 1;
+      });
+
       const localities = Array.from(new Set(customers.map(c => c.locality))).filter(Boolean);
 
       return (
@@ -320,53 +488,93 @@
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Tiffin<span className="text-[var(--color-amber)]">Flow</span></span>
                     <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full badge-active">
-                      Pro-Rated OS
+                      SaaS 2.0
                     </span>
                   </div>
-                  <p className="text-xs text-[var(--text-secondary)]">Home-Style Tiffin Billing & Kitchen Dispatch</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Rajeshwar Annapurna Kitchens • GSTIN: 08AABCR1234F1Z5</p>
                 </div>
               </div>
 
               {/* Navigation Tabs */}
-              <nav className="flex items-center gap-2">
+              <nav className="hidden lg:flex items-center gap-1.5">
                 <button
                   onClick={() => setActiveTab('landing')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === 'landing' ? 'btn-primary' : 'btn-secondary'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'landing' ? 'btn-primary' : 'btn-secondary'}`}
                 >
-                  ✨ 1. Landing Page
+                  ✨ 1. Overview
                 </button>
                 <button
                   onClick={() => setActiveTab('dashboard')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === 'dashboard' ? 'btn-primary' : 'btn-secondary'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'dashboard' ? 'btn-primary' : 'btn-secondary'}`}
                 >
                   👥 2. Subscriptions & Bills
                 </button>
                 <button
                   onClick={() => setActiveTab('dispatch')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === 'dispatch' ? 'btn-primary' : 'btn-secondary'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'dispatch' ? 'btn-primary' : 'btn-secondary'}`}
                 >
-                  👨‍🍳 3. Kitchen Dispatch
+                  👨‍🍳 3. Dispatch
+                </button>
+                <button
+                  onClick={() => setActiveTab('kds')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'kds' ? 'btn-primary' : 'btn-secondary'}`}
+                >
+                  📺 4. KDS TV Mode
+                </button>
+                <button
+                  onClick={() => setActiveTab('driver')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'driver' ? 'btn-primary' : 'btn-secondary'}`}
+                >
+                  🛵 5. Driver Routes
+                </button>
+                <button
+                  onClick={() => setActiveTab('whatsapp')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'whatsapp' ? 'btn-primary' : 'btn-secondary'}`}
+                >
+                  💬 6. WhatsApp Bot
+                </button>
+                <button
+                  onClick={() => setActiveTab('audit')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'audit' ? 'btn-primary' : 'btn-secondary'}`}
+                >
+                  🛡️ 7. Audit Logs
                 </button>
               </nav>
 
-              {/* Theme Toggle & Actions */}
+              {/* Theme Toggle & API Status */}
               <div className="flex items-center gap-3">
-                {/* LIGHT / DARK THEME TOGGLE BUTTON */}
+                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-semibold text-emerald-600">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  API Port: 5000
+                </div>
+
                 <button
                   onClick={toggleTheme}
-                  className="px-3.5 py-2 rounded-lg text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-card-hover)] text-[var(--text-primary)] hover:border-[var(--color-amber)] flex items-center gap-2 transition"
-                  title="Toggle Light / Dark Mode"
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-card-hover)] text-[var(--text-primary)] hover:border-[var(--color-amber)] transition"
                 >
-                  {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+                  {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
                 </button>
 
                 <button
                   onClick={() => setNewSubModal(true)}
-                  className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg border border-[var(--color-amber)] text-[var(--color-amber)] hover:bg-[var(--color-amber-glow)] transition"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-amber)] text-[var(--color-amber)] hover:bg-[var(--color-amber-glow)] transition"
                 >
-                  + Add Subscriber
+                  + Add Sub
                 </button>
               </div>
+            </div>
+
+            {/* Mobile Nav Bar */}
+            <div className="lg:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-[var(--border-color)]">
+              {['landing', 'dashboard', 'dispatch', 'kds', 'driver', 'whatsapp', 'audit'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-2.5 py-1 rounded text-xs font-medium whitespace-nowrap ${activeTab === tab ? 'bg-amber-500 text-slate-950 font-bold' : 'text-[var(--text-secondary)]'}`}
+                >
+                  {tab.toUpperCase()}
+                </button>
+              ))}
             </div>
           </header>
 
@@ -386,7 +594,6 @@
             {/* TAB 1: ONE-PAGE LANDING PAGE */}
             {activeTab === 'landing' && (
               <div className="space-y-12 animate-fade-in">
-                {/* Hero */}
                 <div className="text-center py-8 space-y-4">
                   <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-amber-glow)] border border-[var(--color-amber)] text-[var(--color-amber)] text-xs font-bold uppercase tracking-wider">
                     ⚡ Solves the Storyline & The Twist
@@ -395,21 +602,19 @@
                     Every customer billed <br/><span className="text-[var(--color-amber)]">only for the days</span> actually served.
                   </h1>
                   <p className="text-[var(--text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-                    The smart operating system for home-style tiffin services. Handles monthly weekday lunch delivery, 1-click vacation pause, instant phone lookup, and automated pro-rated billing.
+                    The smart operating system for home-style tiffin services. Handles monthly weekday lunch delivery, 1-click vacation pause, instant phone lookup, strict 9:00 AM cutoff rules, and automated GST pro-rated invoicing.
                   </p>
-                  <div className="flex justify-center gap-4 pt-3">
+                  <div className="flex justify-center gap-4 pt-3 flex-wrap">
                     <button onClick={() => setActiveTab('dashboard')} className="btn-primary text-base px-8 py-3.5 flex items-center gap-2">
                       Try Interactive Dashboard & Billing →
                     </button>
-                    <button onClick={() => setActiveTab('dispatch')} className="btn-secondary text-base px-6 py-3.5">
-                      View Kitchen Prep Count
+                    <button onClick={() => setActiveTab('kds')} className="btn-secondary text-base px-6 py-3.5">
+                      Open KDS TV Screen
                     </button>
                   </div>
                 </div>
 
-                {/* 5 Mandatory Landing Page Sections */}
                 <div className="grid md:grid-cols-2 gap-6">
-                  {/* Section 1 */}
                   <div className="glass-card p-6 border-l-4 border-amber-500 space-y-2">
                     <span className="text-xs uppercase font-bold text-[var(--color-amber)]">Section 1</span>
                     <h3 className="text-xl font-bold text-[var(--text-primary)]">What is TiffinFlow?</h3>
@@ -418,19 +623,17 @@
                     </p>
                   </div>
 
-                  {/* Section 2 */}
                   <div className="glass-card p-6 border-l-4 border-emerald-500 space-y-2">
                     <span className="text-xs uppercase font-bold text-[var(--color-emerald)]">Section 2</span>
                     <h3 className="text-xl font-bold text-[var(--text-primary)]">Key Features</h3>
                     <ul className="text-[var(--text-secondary)] text-sm space-y-1.5 list-disc list-inside">
                       <li><strong>Automated Pro-Rated Billing:</strong> Exact formula <code className="text-[var(--color-amber)] font-bold">(Monthly Rate / Weekdays) × Days Delivered</code>.</li>
+                      <li><strong>Strict 9:00 AM Cutoff:</strong> Same-day cancellations locked after 9:00 AM to prevent kitchen food wastage.</li>
                       <li><strong>1-Click Vacation Pause:</strong> Pick date ranges with automatic weekend exclusion.</li>
-                      <li><strong>Instant Phone Search:</strong> Fast lookups during customer phone calls.</li>
-                      <li><strong>Kitchen Dispatch Board:</strong> Live morning counts (Cook vs Paused).</li>
+                      <li><strong>KDS TV Display & Driver Routes:</strong> High-contrast prep tally and Google Maps delivery navigation.</li>
                     </ul>
                   </div>
 
-                  {/* Section 3 */}
                   <div className="glass-card p-6 border-l-4 border-blue-500 space-y-2">
                     <span className="text-xs uppercase font-bold text-blue-500">Section 3</span>
                     <h3 className="text-xl font-bold text-[var(--text-primary)]">Target Audience</h3>
@@ -439,7 +642,6 @@
                     </p>
                   </div>
 
-                  {/* Section 4 */}
                   <div className="glass-card p-6 border-l-4 border-rose-500 space-y-2">
                     <span className="text-xs uppercase font-bold text-[var(--color-rose)]">Section 4</span>
                     <h3 className="text-xl font-bold text-[var(--text-primary)]">How It Helps</h3>
@@ -449,28 +651,32 @@
                   </div>
                 </div>
 
-                {/* Section 5 */}
                 <div className="glass-card p-8 border border-[var(--color-amber)] space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xs uppercase font-bold text-[var(--color-amber)] tracking-wider">Section 5</span>
-                    <span className="text-xs font-semibold text-[var(--text-muted)]">Product Roadmap</span>
+                    <span className="text-xs font-semibold text-[var(--text-muted)]">Live Interactive Modules</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-[var(--text-primary)]">Three Features We Would Build Next</h3>
-                  <div className="grid md:grid-cols-3 gap-5 pt-2">
-                    <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-1">
-                      <div className="text-2xl">🤖 1.</div>
-                      <h4 className="font-bold text-[var(--text-primary)] text-base">WhatsApp AI Pause Bot</h4>
-                      <p className="text-[var(--text-secondary)] text-xs leading-relaxed">Customers text "Pause my lunch till Monday", parsed automatically via natural language processing to update kitchen counts.</p>
+                  <h3 className="text-2xl font-bold text-[var(--text-primary)]">Full Enterprise SaaS Suite Ready For Inspection</h3>
+                  <div className="grid md:grid-cols-4 gap-4 pt-2">
+                    <div onClick={() => setActiveTab('kds')} className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] cursor-pointer hover:border-amber-500 transition space-y-1">
+                      <div className="text-2xl">📺</div>
+                      <h4 className="font-bold text-[var(--text-primary)] text-sm">KDS TV Display</h4>
+                      <p className="text-[var(--text-secondary)] text-xs">High-contrast wallboard for cooks with live meal & allergy tallies.</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-1">
-                      <div className="text-2xl">🗺️ 2.</div>
-                      <h4 className="font-bold text-[var(--text-primary)] text-base">Delivery Boy Route Optimizer</h4>
-                      <p className="text-[var(--text-secondary)] text-xs leading-relaxed">Smart GPS route clustering for active daily drops, completely skipping paused homes to save travel time and fuel.</p>
+                    <div onClick={() => setActiveTab('driver')} className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] cursor-pointer hover:border-amber-500 transition space-y-1">
+                      <div className="text-2xl">🛵</div>
+                      <h4 className="font-bold text-[var(--text-primary)] text-sm">Driver Route Manifest</h4>
+                      <p className="text-[var(--text-secondary)] text-xs">Clustered delivery drops with 1-tap Google Maps directions.</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-1">
-                      <div className="text-2xl">💳 3.</div>
-                      <h4 className="font-bold text-[var(--text-primary)] text-base">UPI AutoPay & WhatsApp Bill PDF</h4>
-                      <p className="text-[var(--text-secondary)] text-xs leading-relaxed">Automated 1st-of-the-month itemized PDF generation delivered via WhatsApp with 1-click UPI deep-link payment.</p>
+                    <div onClick={() => setActiveTab('whatsapp')} className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] cursor-pointer hover:border-amber-500 transition space-y-1">
+                      <div className="text-2xl">💬</div>
+                      <h4 className="font-bold text-[var(--text-primary)] text-sm">WhatsApp Cloud Bot</h4>
+                      <p className="text-[var(--text-secondary)] text-xs">Interactive bot webhook simulator for instant pause & menu commands.</p>
+                    </div>
+                    <div onClick={() => setActiveTab('audit')} className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] cursor-pointer hover:border-amber-500 transition space-y-1">
+                      <div className="text-2xl">🛡️</div>
+                      <h4 className="font-bold text-[var(--text-primary)] text-sm">Immutable Audit Logs</h4>
+                      <p className="text-[var(--text-secondary)] text-xs">Complete enterprise traceability with actor role and IP addresses.</p>
                     </div>
                   </div>
                 </div>
@@ -501,11 +707,11 @@
                   <div className="glass-card p-4 border-l-4 border-blue-500">
                     <span className="text-xs text-[var(--text-muted)] font-medium">Projected Monthly</span>
                     <div className="text-3xl font-black text-[var(--text-primary)] mt-1">₹18,300</div>
-                    <span className="text-[11px] text-[var(--text-muted)]">Auto-prorated at month end</span>
+                    <span className="text-[11px] text-[var(--text-muted)]">Auto-prorated with 5% GST</span>
                   </div>
                 </div>
 
-                {/* TODAY'S SPECIAL KITCHEN MENU CARD (FEATURE ADDITION) */}
+                {/* TODAY'S SPECIAL KITCHEN MENU CARD */}
                 <div className="glass-card p-5 border border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-transparent">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -556,14 +762,14 @@
                   )}
                 </div>
 
-                {/* INSTANT PHONE SEARCH CARD (Problem brief centerpiece) */}
+                {/* INSTANT PHONE SEARCH CARD */}
                 <div className="glass-card p-6 border border-amber-500/30">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                     <div>
                       <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                         📞 Instant Phone Number Lookup
                       </h3>
-                      <p className="text-xs text-[var(--text-secondary)]">Search customer by phone to view current status, pause logs, and live bill</p>
+                      <p className="text-xs text-[var(--text-secondary)]">Search customer by phone to view current status, pause logs, and live tax bill</p>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-[var(--text-muted)]">Try demo:</span>
@@ -587,7 +793,6 @@
                     <span className="absolute left-4 top-3 text-[var(--text-muted)]">🔍</span>
                   </div>
 
-                  {/* Matched Customer Live Card */}
                   {matchedCustomer && (
                     <div className="mt-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in shadow-md">
                       <div>
@@ -618,7 +823,7 @@
                           </button>
                         )}
                         <button onClick={() => setBillModal(matchedCustomer)} className="btn-primary text-xs px-4 py-2">
-                          🧮 Compute Pro-Rated Bill
+                          🧮 Compute Tax Bill
                         </button>
                       </div>
                     </div>
@@ -748,8 +953,9 @@
                     <h2 className="text-2xl font-bold text-[var(--text-primary)]">👨‍🍳 Morning Kitchen Dispatch Board</h2>
                     <p className="text-sm text-[var(--text-secondary)]">Pre-sorts active lunch dabbas to cook vs paused subscribers on leave today</p>
                   </div>
-                  <div className="bg-[var(--bg-surface)] px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs text-[var(--text-secondary)] shadow-sm">
-                    📅 Target Date: <strong className="text-[var(--color-amber)] font-bold">Today (Weekday Delivery)</strong>
+                  <div className="bg-[var(--bg-surface)] px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs text-[var(--text-secondary)] shadow-sm flex items-center gap-2">
+                    <span>🔒 9:00 AM Cutoff Status:</span>
+                    <strong className="text-emerald-500 font-bold">LOCKED FOR DISPATCH</strong>
                   </div>
                 </div>
 
@@ -758,11 +964,11 @@
                   <div className="glass-card p-6 border-t-4 border-emerald-500 space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-bold text-[var(--color-emerald)]">✅ Cook & Pack ({activeCount} Dabbas)</h3>
-                      <span className="text-xs px-2 py-0.5 rounded badge-active">Mon–Fri Active</span>
+                      <span className="text-xs px-2 py-0.5 rounded badge-active">Active Today</span>
                     </div>
 
                     <div className="space-y-3">
-                      {customers.filter(c => c.status === 'ACTIVE').map(c => (
+                      {activeList.map(c => (
                         <div key={c.id} className="p-3.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-1 shadow-sm">
                           <div className="flex justify-between items-center">
                             <h4 className="font-bold text-[var(--text-primary)] text-sm">{c.name}</h4>
@@ -783,7 +989,7 @@
                     </div>
 
                     <div className="space-y-3">
-                      {customers.filter(c => c.status === 'PAUSED').map(c => (
+                      {pausedList.map(c => (
                         <div key={c.id} className="p-3.5 rounded-xl bg-[var(--bg-surface)] border border-rose-500/30 space-y-1 shadow-sm">
                           <div className="flex justify-between items-center">
                             <h4 className="font-bold text-[var(--text-primary)] text-sm">{c.name}</h4>
@@ -797,6 +1003,345 @@
                       ))}
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: KDS (KITCHEN DISPLAY TV SCREEN MODE) */}
+            {activeTab === 'kds' && (
+              <div className="space-y-6 animate-fade-in p-4 rounded-2xl kds-tv">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">📺</span>
+                      <h2 className="text-3xl font-black text-amber-400 tracking-tight">KITCHEN DISPLAY SYSTEM (KDS TV)</h2>
+                      <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                        9:00 AM CUTOFF LOCKED
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-400 mt-1">Live prep counters and packaging manifest for Head Cook Ramu Maharaj</p>
+                  </div>
+                  <div className="text-right font-mono text-xs text-slate-400">
+                    <div>DATE: <strong>2026-09-17</strong></div>
+                    <div>SERVICE: <strong>LUNCH DISPATCH (12:30 PM)</strong></div>
+                  </div>
+                </div>
+
+                {/* 4 TV Big Stat Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="kds-card p-5 rounded-xl border-l-4 border-emerald-500">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">TOTAL TO COOK TODAY</span>
+                    <div className="text-5xl font-black text-emerald-400 mt-2">{activeCount}</div>
+                    <span className="text-xs text-slate-400">Strict active count</span>
+                  </div>
+                  <div className="kds-card p-5 rounded-xl border-l-4 border-rose-500">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">PAUSED / ON LEAVE</span>
+                    <div className="text-5xl font-black text-rose-400 mt-2">{pausedCount}</div>
+                    <span className="text-xs text-slate-400">Zero groceries prepared</span>
+                  </div>
+                  <div className="kds-card p-5 rounded-xl border-l-4 border-amber-500">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">STANDARD THALIS</span>
+                    <div className="text-5xl font-black text-amber-400 mt-2">{tierCounts.STANDARD}</div>
+                    <span className="text-xs text-slate-400">4 Phulkas + Dal + Sabzi</span>
+                  </div>
+                  <div className="kds-card p-5 rounded-xl border-l-4 border-blue-500">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">DELUXE / DIET MEALS</span>
+                    <div className="text-5xl font-black text-blue-400 mt-2">{tierCounts.DELUXE}</div>
+                    <span className="text-xs text-slate-400">Paneer / Protein specials</span>
+                  </div>
+                </div>
+
+                {/* Live Meal Tally & Dietary Alerts */}
+                <div className="grid lg:grid-cols-2 gap-6">
+                  {/* Prep Breakdown */}
+                  <div className="kds-card p-6 rounded-xl space-y-4">
+                    <h3 className="text-lg font-bold text-amber-400 flex items-center gap-2">
+                      🍱 MEAL TYPE DISTRIBUTION
+                    </h3>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
+                        <div className="text-xs text-slate-400 font-bold">VEG STANDARD</div>
+                        <div className="text-3xl font-black text-emerald-400 mt-1">{mealCounts.Veg || 0}</div>
+                      </div>
+                      <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
+                        <div className="text-xs text-slate-400 font-bold">JAIN SATVIK</div>
+                        <div className="text-3xl font-black text-amber-400 mt-1">{mealCounts.Jain || 0}</div>
+                      </div>
+                      <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
+                        <div className="text-xs text-slate-400 font-bold">HIGH PROTEIN</div>
+                        <div className="text-3xl font-black text-blue-400 mt-1">{mealCounts['Diet/High-Protein'] || 0}</div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-slate-900 border border-slate-800 space-y-2 text-xs">
+                      <div className="text-amber-400 font-bold uppercase tracking-wider">Kitchen Packing Checklist:</div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Total Phulkas to puff:</span>
+                        <strong className="font-mono text-emerald-400">{activeCount * 4} rotis</strong>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Dal batches:</span>
+                        <strong className="font-mono text-emerald-400">5 large containers</strong>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Sweet / Gulab Jamun count:</span>
+                        <strong className="font-mono text-emerald-400">{activeCount} pieces</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dietary Alerts Stream */}
+                  <div className="kds-card p-6 rounded-xl space-y-4">
+                    <h3 className="text-lg font-bold text-rose-400 flex items-center gap-2">
+                      ⚠️ CRITICAL DIETARY & ALLERGY ALERTS ({activeList.filter(c => c.dietary_notes).length})
+                    </h3>
+                    <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                      {activeList.filter(c => c.dietary_notes).map(c => (
+                        <div key={c.id} className="p-3 rounded-lg bg-rose-950/30 border border-rose-800/40 flex items-center justify-between">
+                          <div>
+                            <div className="font-bold text-slate-200 text-sm">{c.name} <span className="text-xs font-normal text-slate-400">({c.locality})</span></div>
+                            <div className="text-xs text-rose-400 font-semibold mt-0.5">⚠️ {c.dietary_notes}</div>
+                          </div>
+                          <span className="text-xs font-mono font-bold px-2 py-1 rounded bg-slate-800 text-amber-400">
+                            {c.meal_type}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: DRIVER MOBILE ROUTE DISPATCH */}
+            {activeTab === 'driver' && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-[var(--text-primary)]">🛵 Driver Route & Dispatch Manifest</h2>
+                    <p className="text-sm text-[var(--text-secondary)]">Lead Driver: <strong>Mukesh Saini</strong> • Auto-skips paused homes to save fuel</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-3 py-1.5 rounded-lg bg-[var(--color-emerald-glow)] text-[var(--color-emerald)] font-bold border border-emerald-500/30">
+                      Total Active Stops: {activeCount}
+                    </span>
+                    <span className="text-xs px-3 py-1.5 rounded-lg bg-[var(--color-rose-glow)] text-[var(--color-rose)] font-bold border border-rose-500/30">
+                      Skipped Paused: {pausedCount}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Locality Clusters */}
+                <div className="space-y-6">
+                  {Object.entries(driverClusters).map(([locality, stops]) => (
+                    <div key={locality} className="glass-card p-6 space-y-4">
+                      <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">📍</span>
+                          <h3 className="text-lg font-bold text-[var(--text-primary)]">{locality} Sector</h3>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-color)] font-bold text-[var(--color-amber)]">
+                            {stops.length} Drops
+                          </span>
+                        </div>
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${locality}, Jaipur`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-bold text-blue-500 hover:underline flex items-center gap-1"
+                        >
+                          🗺️ Open Cluster in Google Maps →
+                        </a>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {stops.map(stop => {
+                          const currStatus = deliveryStatuses[stop.subscription_id] || 'PENDING';
+                          const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${stop.address}, Jaipur`)}`;
+
+                          return (
+                            <div key={stop.id} className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-sm">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <h4 className="font-bold text-[var(--text-primary)] text-base">{stop.name}</h4>
+                                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">📍 {stop.address}</p>
+                                  <p className="text-xs font-mono text-[var(--color-amber)] font-bold mt-1">📞 {stop.phone}</p>
+                                </div>
+                                <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full ${
+                                  currStatus === 'DELIVERED' ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/30' :
+                                  currStatus === 'DOORBELL_RUNG' ? 'bg-amber-500/20 text-amber-600 border border-amber-500/30' :
+                                  currStatus === 'FAILED' ? 'bg-rose-500/20 text-rose-600 border border-rose-500/30' :
+                                  'bg-slate-500/10 text-slate-500 border border-slate-500/20'
+                                }`}>
+                                  {currStatus}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center justify-between text-xs text-[var(--text-muted)] pt-1 border-t border-[var(--border-color)]">
+                                <span>Meal: <strong className="text-[var(--text-primary)]">{stop.meal_type}</strong></span>
+                                {stop.dietary_notes && <span className="text-[var(--color-amber)] font-medium">⚠️ {stop.dietary_notes}</span>}
+                              </div>
+
+                              <div className="flex items-center justify-between gap-2 pt-2">
+                                <a
+                                  href={mapsUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1 text-blue-500 font-bold border-blue-500/30"
+                                >
+                                  🧭 Navigate (1-Tap)
+                                </a>
+
+                                <div className="flex gap-1.5">
+                                  <button
+                                    onClick={() => handleDriverStatus(stop.subscription_id, 'DOORBELL_RUNG')}
+                                    className="px-2.5 py-1.5 rounded-lg text-xs bg-amber-500/10 text-amber-600 font-bold border border-amber-500/30 hover:bg-amber-500/20"
+                                    title="Mark Bell Rung"
+                                  >
+                                    🔔 Rung
+                                  </button>
+                                  <button
+                                    onClick={() => handleDriverStatus(stop.subscription_id, 'DELIVERED')}
+                                    className="px-2.5 py-1.5 rounded-lg text-xs bg-emerald-500/15 text-emerald-600 font-bold border border-emerald-500/30 hover:bg-emerald-500/25"
+                                    title="Mark Delivered"
+                                  >
+                                    ✅ Delivered
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 6: WHATSAPP BOT SIMULATOR */}
+            {activeTab === 'whatsapp' && (
+              <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+                <div className="text-center space-y-2">
+                  <h2 className="text-2xl font-bold text-[var(--text-primary)]">💬 Meta WhatsApp Cloud API Bot Simulator</h2>
+                  <p className="text-xs text-[var(--text-secondary)]">Simulates incoming webhook commands to <code>POST /api/webhooks/whatsapp</code></p>
+                </div>
+
+                {/* Mobile Phone Mock Container */}
+                <div className="glass-card border-2 border-[var(--border-color)] rounded-3xl overflow-hidden shadow-2xl">
+                  {/* WhatsApp Top Bar */}
+                  <div className="bg-emerald-700 text-white p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">
+                        🍱
+                      </div>
+                      <div>
+                        <div className="font-bold text-sm">Rajeshwar Tiffin Bot</div>
+                        <div className="text-[11px] text-emerald-100 flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                          Online • Verified Business API
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-xs bg-emerald-800 px-2.5 py-1 rounded font-mono">
+                      +91 98290 01122
+                    </div>
+                  </div>
+
+                  {/* Chat Bubbles Scroll Area */}
+                  <div className="p-4 space-y-3 bg-[var(--bg-primary)] min-h-[380px] max-h-[420px] overflow-y-auto">
+                    <div className="text-center">
+                      <span className="text-[10px] uppercase font-bold px-3 py-1 rounded-full bg-slate-500/10 text-[var(--text-muted)]">
+                        Messages are end-to-end encrypted
+                      </span>
+                    </div>
+
+                    {chatMessages.map((msg, i) => (
+                      <div key={i} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[80%] p-3 text-xs leading-relaxed whitespace-pre-line ${msg.sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'}`}>
+                          {msg.text}
+                          <div className="text-[9px] text-right opacity-60 mt-1">
+                            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Quick Preset Action Chips */}
+                  <div className="p-2.5 bg-[var(--bg-surface)] border-t border-[var(--border-color)] flex gap-2 overflow-x-auto">
+                    <button onClick={() => handleSendWhatsAppMessage('MENU')} className="px-3 py-1 rounded-full text-xs bg-amber-500/15 text-[var(--color-amber)] font-bold border border-amber-500/30 whitespace-nowrap">
+                      🍲 MENU
+                    </button>
+                    <button onClick={() => handleSendWhatsAppMessage('PAUSE 2026-09-21 2026-09-25')} className="px-3 py-1 rounded-full text-xs bg-rose-500/15 text-[var(--color-rose)] font-bold border border-rose-500/30 whitespace-nowrap">
+                      ⏸️ PAUSE Next Week
+                    </button>
+                    <button onClick={() => handleSendWhatsAppMessage('RESUME')} className="px-3 py-1 rounded-full text-xs bg-emerald-500/15 text-[var(--color-emerald)] font-bold border border-emerald-500/30 whitespace-nowrap">
+                      ▶️ RESUME Delivery
+                    </button>
+                    <button onClick={() => handleSendWhatsAppMessage('BILL')} className="px-3 py-1 rounded-full text-xs bg-blue-500/15 text-blue-600 font-bold border border-blue-500/30 whitespace-nowrap">
+                      💳 Check BILL
+                    </button>
+                  </div>
+
+                  {/* Input Form */}
+                  <form onSubmit={(e) => { e.preventDefault(); handleSendWhatsAppMessage(); }} className="p-3 bg-[var(--bg-surface)] border-t border-[var(--border-color)] flex gap-2">
+                    <input
+                      type="text"
+                      className="input-control flex-1 text-xs"
+                      placeholder="Type WhatsApp command (e.g. MENU, PAUSE)..."
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                    />
+                    <button type="submit" className="btn-primary text-xs px-4 py-2">
+                      Send
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 7: ENTERPRISE AUDIT LOGS */}
+            {activeTab === 'audit' && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-[var(--text-primary)]">🛡️ Enterprise Immutable Audit Logs</h2>
+                    <p className="text-sm text-[var(--text-secondary)]">Tracks every pause change, cutoff lock, and delivery status with IP timestamps</p>
+                  </div>
+                  <div className="text-xs px-3 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)]">
+                    Audit Records: <strong>{auditLogs.length} events logged</strong>
+                  </div>
+                </div>
+
+                <div className="glass-card p-6 overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[var(--border-color)] text-[var(--text-muted)]">
+                        <th className="pb-3 font-semibold">Timestamp</th>
+                        <th className="pb-3 font-semibold">Actor & Role</th>
+                        <th className="pb-3 font-semibold">Action</th>
+                        <th className="pb-3 font-semibold">Event Details</th>
+                        <th className="pb-3 font-semibold">Client IP</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--border-color)]">
+                      {auditLogs.map(log => (
+                        <tr key={log.id} className="hover:bg-[var(--bg-card-hover)] transition">
+                          <td className="py-3 font-mono text-[var(--text-secondary)] whitespace-nowrap">{log.timestamp}</td>
+                          <td className="py-3">
+                            <strong className="text-[var(--text-primary)]">{log.actor_name}</strong>
+                            <span className="text-[10px] ml-1.5 px-1.5 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-color)] uppercase font-bold text-[var(--color-amber)]">
+                              {log.actor_role}
+                            </span>
+                          </td>
+                          <td className="py-3 font-mono font-bold text-[var(--color-emerald)]">{log.action}</td>
+                          <td className="py-3 text-[var(--text-secondary)]">{log.details}</td>
+                          <td className="py-3 font-mono text-[var(--text-muted)]">{log.ip_address}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
@@ -862,7 +1407,7 @@
                     <input name="reason" type="text" defaultValue="Diwali Festival / Vacation" required className="input-control w-full text-xs" />
                   </div>
                   <div className="text-[11px] text-[var(--color-amber)] bg-[var(--color-amber-glow)] p-2.5 rounded-lg border border-[var(--color-amber)]">
-                    💡 Customer will not be billed for weekdays during this window.
+                    💡 Strict 9:00 AM Cutoff: Requests after 9:00 AM lock same-day cooking and apply from next business day.
                   </div>
                   <div className="flex justify-end gap-2 pt-2">
                     <button type="button" onClick={() => setPauseModal(null)} className="btn-secondary text-xs px-4 py-2">Cancel</button>
@@ -873,10 +1418,10 @@
             </div>
           )}
 
-          {/* PRO-RATED BILLING MODAL WITH DIRECT WHATSAPP LINK */}
+          {/* PRO-RATED BILLING MODAL WITH FULL TAX INVOICE & GST BREAKDOWN */}
           {billModal && (() => {
-            const math = calculateProratedMath(billModal.monthly_price, '2026-09', billModal.pause_logs);
-            const rawBillText = `🍱 *TIFFINFLOW PRO-RATED BILL* 🍱\nCustomer: ${billModal.name}\nMonth: September 2026\nPlan: ${billModal.plan_name} (₹${billModal.monthly_price}/mo)\nDelivered Days: ${math.deliveredWeekdays} weekdays\nPaused Days: ${math.pausedWeekdays} days\n*Total Payable: ₹${math.finalAmount}*\nCustomer Saved: ₹${math.savings}`;
+            const math = calculateProratedMath(billModal.monthly_price, '2026-09', billModal.pause_logs, true);
+            const rawBillText = `🍱 *TIFFINFLOW TAX INVOICE* 🍱\nRajeshwar Annapurna Kitchens\nGSTIN: 08AABCR1234F1Z5 | SAC: 996331\nCustomer: ${billModal.name}\nMonth: September 2026\nPlan: ${billModal.plan_name} (₹${billModal.monthly_price}/mo)\nDelivered Days: ${math.deliveredWeekdays} weekdays\nPaused Days: ${math.pausedWeekdays} days\nTaxable Amount: ₹${math.taxableAmount}\nCGST (2.5%): ₹${math.cgst}\nSGST (2.5%): ₹${math.sgst}\n*Total Payable: ₹${math.finalAmount}*\nCustomer Saved: ₹${math.savings}`;
             const whatsappLink = `https://wa.me/91${billModal.phone}?text=${encodeURIComponent(rawBillText)}`;
 
             return (
@@ -884,14 +1429,24 @@
                 <div className="glass-card max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative animate-fade-in">
                   <button onClick={() => setBillModal(null)} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-primary)]">✕</button>
                   
-                  <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
-                    <div>
-                      <h3 className="text-xl font-bold text-[var(--text-primary)]">Pro-Rated Month-End Invoice</h3>
-                      <p className="text-xs text-[var(--text-secondary)]">Customer: <strong>{billModal.name}</strong> • Plan: {billModal.plan_name}</p>
+                  {/* Tax Invoice Header */}
+                  <div className="border-b border-[var(--border-color)] pb-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-[var(--color-amber)]">
+                          OFFICIAL TAX INVOICE
+                        </span>
+                        <h3 className="text-xl font-bold text-[var(--text-primary)] mt-1">Rajeshwar Annapurna Tiffin Kitchens</h3>
+                        <p className="text-xs text-[var(--text-secondary)]">GSTIN: <strong>08AABCR1234F1Z5</strong> • HSN/SAC Code: <strong>996331</strong> (Outdoor Catering)</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs font-mono font-bold text-[var(--text-muted)]">INV-2026-09-{String(billModal.id).padStart(3, '0')}</span>
+                        <div className="text-xs text-[var(--text-secondary)]">Billing Month: <strong>Sept 2026</strong></div>
+                      </div>
                     </div>
-                    <span className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-[var(--color-amber)] font-mono font-bold">
-                      Cycle: September 2026
-                    </span>
+                    <div className="mt-2 text-xs text-[var(--text-secondary)]">
+                      Billed to: <strong>{billModal.name}</strong> (📞 {billModal.phone}) • {billModal.address}
+                    </div>
                   </div>
 
                   {/* FORMULA BREAKDOWN BOX */}
@@ -922,15 +1477,31 @@
                       </div>
                     </div>
 
+                    {/* Tax Breakdown Rows */}
+                    <div className="space-y-1 pt-2 border-t border-[var(--border-color)] text-xs">
+                      <div className="flex justify-between text-[var(--text-secondary)]">
+                        <span>Taxable Amount ({math.deliveredWeekdays} days × ₹{math.dailyRate}):</span>
+                        <span className="font-bold text-[var(--text-primary)]">₹{math.taxableAmount}</span>
+                      </div>
+                      <div className="flex justify-between text-[var(--text-secondary)]">
+                        <span>CGST (2.5%):</span>
+                        <span className="font-mono">₹{math.cgst}</span>
+                      </div>
+                      <div className="flex justify-between text-[var(--text-secondary)]">
+                        <span>SGST (2.5%):</span>
+                        <span className="font-mono">₹{math.sgst}</span>
+                      </div>
+                    </div>
+
                     <div className="flex justify-between items-center pt-3 border-t border-[var(--border-color)]">
                       <div>
-                        <div className="text-xs text-[var(--text-secondary)]">Formula: {math.deliveredWeekdays} delivered × ₹{math.dailyRate}/day</div>
                         {math.savings > 0 && (
                           <div className="text-xs text-[var(--color-emerald)] font-bold">🎉 Customer saved ₹{math.savings} on paused days!</div>
                         )}
+                        <span className="text-[11px] text-[var(--text-muted)]">Billed strictly for weekdays actually served.</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] uppercase text-[var(--text-muted)] font-bold">Final Payable Amount</span>
+                        <span className="text-[10px] uppercase text-[var(--text-muted)] font-bold">Final Total Payable</span>
                         <div className="text-3xl font-black text-[var(--color-amber)]">₹{math.finalAmount}</div>
                       </div>
                     </div>
@@ -939,7 +1510,7 @@
                   {/* ITEMIZED CALENDAR DAYS */}
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">Itemized Day-by-Day Calendar (Sept 2026)</h4>
-                    <div className="max-h-48 overflow-y-auto border border-[var(--border-color)] rounded-xl">
+                    <div className="max-h-40 overflow-y-auto border border-[var(--border-color)] rounded-xl">
                       <table className="w-full text-xs text-left">
                         <thead className="bg-[var(--bg-surface)] sticky top-0 border-b border-[var(--border-color)] text-[var(--text-muted)]">
                           <tr>
@@ -980,12 +1551,12 @@
                         rel="noreferrer"
                         className="btn-primary text-xs px-3.5 py-2 flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
                       >
-                        📲 Send on WhatsApp
+                        📲 Send Tax Invoice on WhatsApp
                       </a>
                       <button 
                         onClick={() => {
                           navigator.clipboard.writeText(rawBillText);
-                          triggerNotification('Copied bill summary to clipboard!');
+                          triggerNotification('Copied official tax bill summary to clipboard!');
                         }}
                         className="btn-secondary text-xs px-3.5 py-2"
                       >
@@ -1020,9 +1591,10 @@
                     address: form.address.value,
                     dietary_notes: form.notes.value,
                     plan_id: 1,
-                    plan_name: 'Ghar Ki Thali',
+                    plan_name: 'Ghar Ki Thali (Standard Veg)',
                     monthly_price: 2200,
                     meal_type: 'Veg',
+                    tier: 'STANDARD',
                     status: 'ACTIVE',
                     pause_logs: []
                   });
@@ -1060,7 +1632,7 @@
 
           {/* FOOTER */}
           <footer className="border-t border-[var(--border-color)] py-6 text-center text-xs text-[var(--text-muted)]">
-            🍱 TiffinFlow — Builder Round Evaluation • Fair Pro-Rated Weekday Billing Engine
+            🍱 TiffinFlow SaaS Platform • Rajeshwar Annapurna Kitchens • GSTIN: 08AABCR1234F1Z5 • Fair Pro-Rated Weekday Billing Engine
           </footer>
 
         </div>

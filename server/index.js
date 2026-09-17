@@ -19,6 +19,8 @@ app.use('/api/plans', require('./routes/plans'));
 app.use('/api/customers', require('./routes/customers'));
 app.use('/api/subscriptions', require('./routes/subscriptions'));
 app.use('/api/billing', require('./routes/billing'));
+app.use('/api/operations', require('./routes/operations'));
+app.use('/api/webhooks', require('./routes/webhooks'));
 
 // Health & System Info endpoint
 app.get('/api/health', (req, res) => {

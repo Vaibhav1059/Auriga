@@ -1,6 +1,6 @@
 # 🧠 REASONING.md — Engineering & Design Thought Process
 
-> **Project:** TiffinFlow — Smart Pro-Rated Tiffin Subscription & Billing Engine  
+> **Project:** TiffinFlow — Enterprise Pro-Rated Tiffin Subscription & SaaS Engine  
 > **Problem Brief:** `tiffin_subscription`  
 > **Candidate:** Vaibhav (GitHub: [Vaibhav1059/Auriga](https://github.com/Vaibhav1059/Auriga))
 
@@ -10,7 +10,7 @@
 
 ### The Storyline Reality
 Home-style tiffin services in urban Indian corridors (Jaipur, Bangalore, Pune, Gurgaon) cater heavily to young professionals, students, and office workers. These subscribers:
-1. Only consume lunch on **weekdays (Monday to Friday)**.
+1. Only consume lunch on **weekdays (Monday to Friday)** or **6 days (Monday to Saturday)** for corporate offices.
 2. Frequently travel home for **festivals (Diwali, Rakhi, Holi)**, weddings, or sick days.
 3. Currently notify the tiffin owner via ad-hoc WhatsApp messages (*"Bhaiya kal se 4 din tiffin mat bhejna"*).
 4. Suffer from heated month-end billing disputes because owners rely on paper registers and struggle to calculate fractional refunds.
@@ -28,22 +28,28 @@ For any given billing cycle $(Y, M)$:
 
 ### Step 1: Enumerate Total Delivery Weekdays
 Let $D$ be the set of calendar dates in the month:
-$$W_{\text{total}} = \sum_{d \in D} \mathbb{I}(\text{day\_of\_week}(d) \in \{\text{Mon, Tue, Wed, Thu, Fri}\})$$
+$$W_{\text{total}} = \sum_{d \in D} \mathbb{I}(\text{is\_delivery\_day}(d))$$
 
 ### Step 2: Enumerate Paused Weekdays
 Let $P$ be the set of confirmed pause date intervals for the subscription. A date $d$ is paused if:
 $$\exists [p_{\text{start}}, p_{\text{end}}] \in P \quad \text{such that} \quad p_{\text{start}} \le d \le p_{\text{end}}$$
 
 The total paused weekdays are:
-$$W_{\text{paused}} = \sum_{d \in D} \mathbb{I}(\text{is\_weekday}(d) \land \text{is\_paused}(d))$$
+$$W_{\text{paused}} = \sum_{d \in D} \mathbb{I}(\text{is\_delivery\_day}(d) \land \text{is\_paused}(d))$$
 
 ### Step 3: Compute Delivered Weekdays
 $$W_{\text{delivered}} = W_{\text{total}} - W_{\text{paused}} - W_{\text{before\_start}}$$
 
-### Step 4: Pro-Rated Rate & Amount
+### Step 4: Pro-Rated Rate & Taxable Amount
 $$\text{Daily Weekday Rate } R = \frac{\text{Monthly Plan Price}}{W_{\text{total}}}$$
-$$\text{Final Payable Amount } A = W_{\text{delivered}} \times R$$
+$$\text{Taxable Amount } T = W_{\text{delivered}} \times R$$
 $$\text{Customer Savings } S = W_{\text{paused}} \times R$$
+
+### Step 5: GST Calculation (SAC 996331)
+For registered commercial tiffin caterers in India:
+$$\text{CGST (2.5\%)} = T \times 0.025$$
+$$\text{SGST (2.5\%)} = T \times 0.025$$
+$$\text{Final Payable Amount } A = T + \text{CGST} + \text{SGST}$$
 
 All calculations are rounded to 2 decimal places.
 
@@ -51,19 +57,57 @@ All calculations are rounded to 2 decimal places.
 
 ## 3. Architecture & Tech Stack Decisions
 
-### 1. Database: SQLite (`better-sqlite3`)
+### 1. Database: SQLite (`better-sqlite3` with WAL mode)
 * **Rationale:** In a timed hackathon / evaluation environment (specifically **GitHub Codespaces**), external database engines (PostgreSQL/MySQL/Docker) introduce network latency, authentication credentials, and startup failure risks.
-* **Benefits:** SQLite is self-contained, transactional, supports full SQL syntax, foreign keys, and indexes (`customers(phone)`). The database auto-initializes and auto-seeds with realistic test data upon first boot.
+* **Benefits:** SQLite is self-contained, transactional, supports full SQL syntax, foreign keys, and indexes (`customers(phone)`, `delivery_runs(date)`). The database auto-initializes and auto-seeds with realistic enterprise test data upon first boot.
 
 ### 2. Backend: Express.js REST API
-* **Rationale:** Fast, minimal, and universally understood. Standardized JSON error handling and clean route modularity (`/api/auth`, `/api/plans`, `/api/customers`, `/api/subscriptions`, `/api/billing`).
+* **Rationale:** Fast, minimal, and universally understood. Standardized JSON error handling and clean route modularity:
+  - `/api/auth`: User registration, JWT login, and profile lookups.
+  - `/api/plans`: 5-day and 6-day meal plan configurations.
+  - `/api/customers`: Instant phone search and customer database.
+  - `/api/subscriptions`: Subscriptions and vacation pause logs.
+  - `/api/billing`: Pro-rated math calculations and tax invoice generation.
+  - `/api/operations`: KDS kitchen display feeds, driver route dispatch, and immutable audit logs.
+  - `/api/webhooks`: Meta WhatsApp Cloud API bot receiver and payment reconciliation.
 
 ### 3. Frontend: React + Vite + Tailwind/Glassmorphism
-* **Rationale:** Blazing fast hot module replacement (HMR), lightweight bundle size, and high design aesthetic. A warm culinary color palette (saffron, slate, emerald, rose) creates an impressive, premium feel for evaluators.
+* **Rationale:** Blazing fast hot module replacement (HMR), lightweight bundle size, and high design aesthetic. A warm culinary color palette (saffron, slate, emerald, rose) with seamless **Light / Dark theme toggle** creates an impressive, premium feel for evaluators.
+* **Standalone Execution:** In addition to Vite, the complete application is delivered as a zero-dependency standalone file (`preview.html`) that executes instantly in any browser.
 
 ---
 
-## 4. Edge Cases Handled
+## 4. Enterprise SaaS Modules & Business Rules
+
+### 1. Strict 9:00 AM Morning Cutoff Policy
+* **Business Problem:** Customers would text at 11:30 AM asking to skip lunch when dal and rotis were already cooking.
+* **Engineering Solution:** `evaluateSameDayCutoff(startDate, currentTime)` strictly enforces the 9:00 AM IST cutoff:
+  - If requested before 9:00 AM: Today's meal is cancelled and not billed.
+  - If requested after 9:00 AM: Today's meal is locked and billed; the pause activates on the next business day.
+
+### 2. Kitchen Display System (KDS TV Wallboard)
+* High-contrast screen designed for commercial kitchen TV mounts.
+* Real-time prep counters for Head Cook Ramu Maharaj: Total Veg Standard, Jain Satvik, and High-Protein thalis.
+* High-priority allergy alert stream ensuring food safety (e.g., peanut allergies, Jain restrictions).
+
+### 3. Driver Route Manifest & Locality Clustering
+* Driver Mukesh Saini receives delivery drops clustered by locality (`Malviya Nagar`, `Sitapura`, `Mansarovar`, `C-Scheme`, `Jagatpura`, `Gopalpura`).
+* **Auto-Skip Paused Homes:** Customers currently on vacation are automatically filtered out from the manifest to prevent wasted travel.
+* 1-tap Google Maps navigation link generated for every active stop.
+
+### 4. Meta WhatsApp Cloud API Bot Simulator
+* Simulates two-way customer messaging:
+  - `MENU`: Returns today's sabzi, dal, phulkas, and accompaniments.
+  - `PAUSE [start] [end]`: Logs vacation pause and recalculates pro-rated billing.
+  - `RESUME`: Re-activates delivery.
+  - `BILL`: Shows current pro-rated balance and customer savings.
+
+### 5. Immutable Audit Logs
+* Regulatory and operational compliance log tracking actor role, action type (`SCHEDULE_PAUSE`, `DELIVERY_STATUS_UPDATE`, `CUTOFF_LOCKED`), IP address, and timestamps.
+
+---
+
+## 5. Edge Cases Handled
 
 | Edge Case | Problem | Solution in TiffinFlow |
 | :--- | :--- | :--- |
@@ -71,26 +115,19 @@ All calculations are rounded to 2 decimal places.
 | **Mid-month subscription start** | Customer signs up on Sept 15th. Should not be billed for Sept 1–14. | Days prior to `start_date` are categorized as `NOT_STARTED` and excluded from delivered days calculation. |
 | **Instant phone number lookups** | Tiffin owners take phone calls while cooking and need instant data. | A B-tree index on `customers.phone` with partial string matching (`LIKE %phone%`) allows the owner to type 3–4 digits and instantly see the customer card, pause logs, and live bill. |
 | **Kitchen count on weekends** | Cook opens the dispatch board on Saturday or Sunday. | System automatically detects `isWeekday = false` and displays **0 Meals to Cook (Weekend Off)**, preventing wasted food preparation. |
+| **Same-day pause after cooking starts** | Customer texts at 10:30 AM to skip lunch. | 9:00 AM Cutoff locks today's meal; pause begins next business day. |
 
 ---
 
-## 5. Testing & Issue Resolution Log
+## 6. Testing & Quality Assurance
 
 ### Automated Unit Test Suite (`tests/billing.test.js`)
-We wrote an automated test suite with 5 test suites:
-1. **Weekday vs Weekend Check:** Confirmed correct day-of-week parsing.
-2. **Zero-Pause Month:** Verified 22 weekdays in Sept 2026 produce an exact ₹2,200 bill with ₹0 savings.
-3. **5-Day Vacation Pause:** Verified that a 5-day pause (Sept 14–18) at ₹100/day produces a ₹1,700 bill and ₹500 customer savings.
-4. **Pause Overlapping Weekend:** Verified that Friday-to-Tuesday pause deducts exactly 3 weekdays, not 5.
-5. **Mid-Month Start:** Verified that starting on Sept 15 accurately excludes the prior 10 weekdays.
-
-### Key Issues Found & Fixed During Development:
-1. **Timezone Date Shifting Bug:**
-   * *Issue:* `new Date('2026-09-01')` in UTC can shift to `2026-08-31 18:30:00` in IST, causing incorrect weekday categorization.
-   * *Fix:* Replaced UTC ISO parsing with integer-based year, month, and day components `new Date(year, month - 1, day)`, guaranteeing 100% calendar accuracy regardless of server timezone.
-2. **Double Invoicing Prevention:**
-   * *Issue:* Generating an invoice twice could duplicate billing records.
-   * *Fix:* Added an existing invoice check in `server/routes/billing.js` to ensure only one official invoice is saved per subscription per month.
-3. **Codespaces Port Binding:**
-   * *Issue:* Vite default settings can bind to `localhost` rather than `0.0.0.0`, causing port forwarding issues in Codespaces.
-   * *Fix:* Configured `server: { host: true, port: 5173 }` in `client/vite.config.js` and set up automatic proxying of `/api` to port 5000.
+All 8 test suites pass with 100% precision:
+1. **Weekday vs Weekend & 6-Day Check:** Confirms correct weekday and Saturday delivery checks.
+2. **Zero-Pause Month with 5% GST:** 22 weekdays in Sept 2026 produce exact ₹2,200 taxable + ₹55 CGST + ₹55 SGST = ₹2,310 final amount.
+3. **5-Day Vacation Pause:** 5-day pause (Sept 14–18) at ₹100/day produces a ₹1,700 bill and ₹500 customer savings.
+4. **Pause Overlapping Weekend:** Friday-to-Tuesday pause deducts exactly 3 weekdays, not 5.
+5. **Mid-Month Start:** Starting on Sept 15 accurately excludes the prior 10 weekdays.
+6. **6-Day Plan Delivery Check:** Correctly includes Saturdays (26 delivery days).
+7. **9:00 AM Strict Cutoff Policy:** Evaluates before vs after cutoff accurately.
+8. **GST HSN/SAC 996331 Invoice Breakdown:** Validates CGST/SGST tax split.

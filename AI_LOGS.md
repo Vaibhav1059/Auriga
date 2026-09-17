@@ -183,3 +183,36 @@ now wait first i want to see the output
 2. Encapsulated the complete React UI, the pro-rated billing calculation engine, the 5-section landing page, the instant phone lookup bar, the subscriber table with pagination/sorting, and the morning kitchen dispatch board.
 3. Launched `preview.html` directly in the user's default desktop browser via `Start-Process "c:\Users\HP\OneDrive\Desktop\Auriga\preview.html"` for real-time visual output and interactive verification.
 
+---
+
+## Turn 6: Request for Light Theme & Feature Enhancements
+
+### User Request:
+```
+not understanding i can connect u with git tell me ad before that add some better functionality + light theme
+```
+
+### AI Execution:
+1. Added dynamic Light / Dark Theme switching to `client/src/index.css` and `preview.html` with high-contrast, clean cards and warm amber saffron accents.
+2. Added **Today's Cooking Menu Broadcaster** with real-time menu editing.
+3. Added **1-Click Quick Leave Presets** in the Pause Modal ("Tomorrow", "Next Week").
+4. Added **Delivery Area / Locality Sorter & Filter** in the customer table.
+5. Added direct **WhatsApp `https://wa.me/...` Bill Sharing** link.
+6. Refreshed `preview.html` in the user's browser.
+
+---
+
+## Turn 7: GitHub Authentication & Pushing to Remote
+
+### User Request:
+```
+push till now next we will se
+```
+
+### AI Execution:
+1. Configured local Git remote and verified local tracking on branch `main`.
+2. Installed local Node.js v20 LTS and ran the complete automated test suite (`tests/billing.test.js`) — all 5 unit tests passed.
+3. Installed server dependencies, initialized the SQLite database, and verified the live backend REST API on `http://localhost:5000/api/health`, `/api/customers/lookup`, and `/api/billing/calculate`.
+4. Staged and committed all latest updates and pushed directly to `https://github.com/Vaibhav1059/Auriga`.
+
+

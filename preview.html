@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TiffinFlow — Live Product Output & Interactive Demo</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React, ReactDOM, Babel for in-browser instant execution -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    :root {
+      --bg-primary: #0b1120;
+      --bg-surface: #131d33;
+      --bg-card: rgba(23, 37, 66, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --color-amber: #f59e0b;
+      --color-amber-light: #fbbf24;
+      --color-emerald: #10b981;
+      --color-rose: #f43f5e;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.06) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: var(--font-heading);
+    }
+
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #0b1120;
+      font-weight: 700;
+      padding: 10px 20px;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.07);
+      color: #fff;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s ease;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-active {
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .badge-paused {
+      background: rgba(244, 63, 94, 0.18);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .input-control {
+      background: rgba(11, 17, 32, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: #fff;
+      padding: 10px 14px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .input-control:focus {
+      border-color: var(--color-amber);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- SEED DATA ---
+    const INITIAL_PLANS = [
+      { id: 1, name: 'Ghar Ki Thali (Standard Veg)', monthly_price: 2200, meal_type: 'Veg' },
+      { id: 2, name: 'Shuddh Jain Satvik Box', monthly_price: 2500, meal_type: 'Jain' },
+      { id: 3, name: 'Executive Deluxe Thali', monthly_price: 3000, meal_type: 'Veg' },
+      { id: 4, name: 'Fitness High-Protein Meal', monthly_price: 3400, meal_type: 'Diet/High-Protein' }
+    ];
+
+    const INITIAL_CUSTOMERS = [
+      { id: 1, subscription_id: 1, name: 'Amit Singhal', phone: '9829012345', address: 'Flat 402, Royal Residency, Malviya Nagar', dietary_notes: 'Less oil, no extra spicy', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [{ id: 1, start_date: '2026-09-07', end_date: '2026-09-08', reason: 'Festival Fasting' }] },
+      { id: 2, subscription_id: 2, name: 'Pooja Mehta', phone: '9829054321', address: 'Tower B, Office 305, IT Park, Sitapura', dietary_notes: 'Strictly Jain (No onion/garlic)', plan_id: 2, plan_name: 'Shuddh Jain Satvik', monthly_price: 2500, meal_type: 'Jain', status: 'PAUSED', pause_logs: [{ id: 2, start_date: '2026-09-14', end_date: '2026-09-18', reason: 'Family Wedding in Udaipur' }] },
+      { id: 3, subscription_id: 3, name: 'Vikram Rathore', phone: '9116789012', address: 'House 14, Sunrise Enclave, C-Scheme', dietary_notes: 'Gym diet, extra salad', plan_id: 4, plan_name: 'Fitness High-Protein', monthly_price: 3400, meal_type: 'Diet', status: 'ACTIVE', pause_logs: [] },
+      { id: 4, subscription_id: 4, name: 'Sneha Agarwal', phone: '9414098765', address: 'A-89, Mansarovar, Sector 5', dietary_notes: 'Regular spicy, extra curd', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] },
+      { id: 5, subscription_id: 5, name: 'Karan Verma', phone: '9784112233', address: 'Co-working Pod 12, WTP, JLN Marg', dietary_notes: 'No capsicum', plan_id: 3, plan_name: 'Executive Deluxe', monthly_price: 3000, meal_type: 'Veg', status: 'PAUSED', pause_logs: [{ id: 3, start_date: '2026-09-15', end_date: '2026-09-18', reason: 'WFH this week' }] },
+      { id: 6, subscription_id: 6, name: 'Ritu Bhasin', phone: '9650044556', address: 'Flat 701, Silver Crest, Jagatpura', dietary_notes: 'Allergic to peanuts', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] },
+      { id: 7, subscription_id: 7, name: 'Deepak Choudhary', phone: '9001234567', address: 'Plot 22, Gopalpura Bypass, Jaipur', dietary_notes: 'Extra roti requested', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] }
+    ];
+
+    // Math Engine helper for pro-rating
+    function calculateProratedMath(monthlyPrice, monthStr, pauseLogs) {
+      const [year, month] = monthStr.split('-').map(Number);
+      const daysInMonth = new Date(year, month, 0).getDate();
+      let totalWeekdays = 0;
+      let pausedWeekdays = 0;
+      let deliveredWeekdays = 0;
+      const schedule = [];
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const curDate = new Date(year, month - 1, d);
+        const dayOfWeek = curDate.getDay();
+        const isWeekday = dayOfWeek !== 0 && dayOfWeek !== 6;
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayName = curDate.toLocaleDateString('en-US', { weekday: 'short' });
+
+        if (isWeekday) totalWeekdays++;
+
+        const pause = pauseLogs.find(p => dateStr >= p.start_date && dateStr <= p.end_date);
+        let status = 'DELIVERED';
+        let charge = 0;
+
+        if (!isWeekday) {
+          status = 'WEEKEND';
+        } else if (pause) {
+          status = 'PAUSED';
+          pausedWeekdays++;
+        } else {
+          status = 'DELIVERED';
+          deliveredWeekdays++;
+        }
+
+        schedule.push({ date: dateStr, day: d, dayName, isWeekday, status, reason: pause?.reason || null });
+      }
+
+      const dailyRate = parseFloat((monthlyPrice / totalWeekdays).toFixed(2));
+      const finalAmount = parseFloat((deliveredWeekdays * dailyRate).toFixed(2));
+      const savings = parseFloat((pausedWeekdays * dailyRate).toFixed(2));
+
+      return { totalWeekdays, deliveredWeekdays, pausedWeekdays, dailyRate, finalAmount, savings, schedule };
+    }
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('landing'); // 'landing', 'dashboard', 'dispatch'
+      const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
+      const [search, setSearch] = useState('');
+      const [statusFilter, setStatusFilter] = useState('ALL');
+      const [phoneQuery, setPhoneQuery] = useState('');
+      const [matchedCustomer, setMatchedCustomer] = useState(null);
+
+      // Modals
+      const [pauseModal, setPauseModal] = useState(null);
+      const [billModal, setBillModal] = useState(null);
+      const [newSubModal, setNewSubModal] = useState(false);
+      const [authModal, setAuthModal] = useState(false);
+      const [user, setUser] = useState({ name: 'Chef Rajesh Sharma', role: 'owner' });
+      const [notification, setNotification] = useState(null);
+
+      // Pagination
+      const [currentPage, setCurrentPage] = useState(1);
+      const pageSize = 5;
+
+      const triggerNotification = (msg) => {
+        setNotification(msg);
+        setTimeout(() => setNotification(null), 4000);
+      };
+
+      const handlePhoneSearch = (val) => {
+        setPhoneQuery(val);
+        if (!val.trim()) {
+          setMatchedCustomer(null);
+          return;
+        }
+        const match = customers.find(c => c.phone.includes(val.trim()));
+        setMatchedCustomer(match || null);
+      };
+
+      const handlePauseSubmit = (subId, startDate, endDate, reason) => {
+        setCustomers(prev => prev.map(c => {
+          if (c.subscription_id === subId) {
+            const newLogs = [...c.pause_logs, { id: Date.now(), start_date: startDate, end_date: endDate, reason }];
+            return { ...c, status: 'PAUSED', pause_logs: newLogs };
+          }
+          return c;
+        }));
+        setPauseModal(null);
+        triggerNotification(`Paused subscription from ${startDate} to ${endDate}`);
+      };
+
+      const handleResume = (subId) => {
+        setCustomers(prev => prev.map(c => {
+          if (c.subscription_id === subId) {
+            return { ...c, status: 'ACTIVE' };
+          }
+          return c;
+        }));
+        triggerNotification('Subscription resumed to ACTIVE!');
+      };
+
+      const handleAddSubscriber = (newCust) => {
+        setCustomers(prev => [newCust, ...prev]);
+        setNewSubModal(false);
+        triggerNotification(`Subscribed ${newCust.name} successfully!`);
+      };
+
+      // Filtered customers
+      const filtered = customers.filter(c => {
+        const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search) || c.address.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus = statusFilter === 'ALL' || c.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
+      const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+      const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+      const activeCount = customers.filter(c => c.status === 'ACTIVE').length;
+      const pausedCount = customers.filter(c => c.status === 'PAUSED').length;
+
+      return (
+        <div className="min-h-screen flex flex-col">
+          {/* TOP NAVBAR */}
+          <header className="sticky top-0 z-50 bg-[#0b1120]/90 backdrop-blur-md border-b border-white/10">
+            <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+              {/* Logo */}
+              <div onClick={() => setActiveTab('landing')} className="flex items-center gap-3 cursor-pointer">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/30">
+                  🍱
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-black text-white tracking-tight">Tiffin<span className="text-amber-500">Flow</span></span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      Live Output
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">Pro-Rated Billing & Kitchen Dispatch</p>
+                </div>
+              </div>
+
+              {/* Navigation Tabs */}
+              <nav className="flex items-center gap-2">
+                <button
+                  onClick={() => setActiveTab('landing')}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === 'landing' ? 'btn-primary' : 'btn-secondary'}`}
+                >
+                  ✨ 1. Landing Page
+                </button>
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === 'dashboard' ? 'btn-primary' : 'btn-secondary'}`}
+                >
+                  👥 2. Subscriptions & Bills
+                </button>
+                <button
+                  onClick={() => setActiveTab('dispatch')}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === 'dispatch' ? 'btn-primary' : 'btn-secondary'}`}
+                >
+                  👨‍🍳 3. Kitchen Dispatch
+                </button>
+              </nav>
+
+              {/* Action */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setNewSubModal(true)}
+                  className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 transition"
+                >
+                  + Add Subscriber
+                </button>
+                {user ? (
+                  <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-white/5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                    <span className="text-xs font-medium text-slate-200">{user.name}</span>
+                  </div>
+                ) : (
+                  <button onClick={() => setAuthModal(true)} className="btn-primary text-xs px-4 py-2">
+                    Login
+                  </button>
+                )}
+              </div>
+            </div>
+          </header>
+
+          {/* NOTIFICATION TOAST */}
+          {notification && (
+            <div className="max-w-7xl mx-auto w-full px-4 mt-4">
+              <div className="bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-4 py-2.5 rounded-xl flex items-center justify-between text-sm shadow-lg">
+                <span>✅ {notification}</span>
+                <button onClick={() => setNotification(null)} className="font-bold text-emerald-400">✕</button>
+              </div>
+            </div>
+          )}
+
+          {/* MAIN CONTENT AREA */}
+          <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
+            
+            {/* TAB 1: ONE-PAGE LANDING PAGE */}
+            {activeTab === 'landing' && (
+              <div className="space-y-14">
+                {/* Hero */}
+                <div className="text-center py-10 space-y-5">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider">
+                    ⚡ Solves the Storyline & The Twist
+                  </div>
+                  <h1 className="text-4xl md:text-6xl font-black text-white leading-tight">
+                    Every customer billed <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">only for the days</span> actually served.
+                  </h1>
+                  <p className="text-slate-300 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                    The smart operating system for home-style tiffin services. Handles monthly weekday lunch delivery, 1-click vacation pause, instant phone lookup, and automated pro-rated billing.
+                  </p>
+                  <div className="flex justify-center gap-4 pt-4">
+                    <button onClick={() => setActiveTab('dashboard')} className="btn-primary text-base px-8 py-3.5 flex items-center gap-2">
+                      Try Interactive Dashboard & Billing →
+                    </button>
+                    <button onClick={() => setActiveTab('dispatch')} className="btn-secondary text-base px-6 py-3.5">
+                      View Kitchen Prep Count
+                    </button>
+                  </div>
+                </div>
+
+                {/* 5 Mandatory Landing Page Sections */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Section 1 */}
+                  <div className="glass-card p-6 border-l-4 border-amber-500 space-y-2">
+                    <span className="text-xs uppercase font-bold text-amber-400">Section 1</span>
+                    <h3 className="text-xl font-bold text-white">What is TiffinFlow?</h3>
+                    <p className="text-slate-300 text-sm leading-relaxed">
+                      A dedicated subscription and pro-rated invoicing engine for home tiffin businesses. Subscriptions run on a monthly schedule delivered every weekday (Mon–Fri). When subscribers take leave for travel, festivals, or holidays, TiffinFlow halts delivery and automatically calculates month-end bills charging only for weekdays served.
+                    </p>
+                  </div>
+
+                  {/* Section 2 */}
+                  <div className="glass-card p-6 border-l-4 border-emerald-500 space-y-2">
+                    <span className="text-xs uppercase font-bold text-emerald-400">Section 2</span>
+                    <h3 className="text-xl font-bold text-white">Key Features</h3>
+                    <ul className="text-slate-300 text-sm space-y-1.5 list-disc list-inside">
+                      <li><strong>Automated Pro-Rated Billing:</strong> Exact formula <code className="text-amber-300">(Monthly Rate / Weekdays) × Days Delivered</code>.</li>
+                      <li><strong>1-Click Vacation Pause:</strong> Pick date ranges with automatic weekend exclusion.</li>
+                      <li><strong>Instant Phone Search:</strong> Fast lookups during customer phone calls.</li>
+                      <li><strong>Kitchen Dispatch Board:</strong> Live morning counts (Cook vs Paused).</li>
+                    </ul>
+                  </div>
+
+                  {/* Section 3 */}
+                  <div className="glass-card p-6 border-l-4 border-blue-500 space-y-2">
+                    <span className="text-xs uppercase font-bold text-blue-400">Section 3</span>
+                    <h3 className="text-xl font-bold text-white">Target Audience</h3>
+                    <p className="text-slate-300 text-sm leading-relaxed">
+                      Home chefs delivering 10–50 dabbas daily, commercial caterers serving corporate IT parks and university hostels, and healthy diet/meal-prep kitchens requiring flexible weekday lunch subscriptions.
+                    </p>
+                  </div>
+
+                  {/* Section 4 */}
+                  <div className="glass-card p-6 border-l-4 border-rose-500 space-y-2">
+                    <span className="text-xs uppercase font-bold text-rose-400">Section 4</span>
+                    <h3 className="text-xl font-bold text-white">How It Helps</h3>
+                    <p className="text-slate-300 text-sm leading-relaxed">
+                      Eliminates heated month-end billing disputes over missed meals, reduces morning raw grocery wastage by up to 18% through exact daily meal counts, and saves hours spent wrestling with handwritten diaries and WhatsApp messages.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Section 5 */}
+                <div className="glass-card p-8 bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 border border-amber-500/30 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs uppercase font-bold text-amber-400 tracking-wider">Section 5</span>
+                    <span className="text-xs font-semibold text-slate-400">Product Vision</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Three Features We Would Build Next</h3>
+                  <div className="grid md:grid-cols-3 gap-5 pt-2">
+                    <div className="bg-slate-950/70 p-4 rounded-xl border border-white/5 space-y-1">
+                      <div className="text-2xl">🤖 1.</div>
+                      <h4 className="font-bold text-white text-base">WhatsApp AI Pause Bot</h4>
+                      <p className="text-slate-400 text-xs leading-relaxed">Customers text "Pause my lunch till Monday", parsed automatically via natural language processing to update kitchen counts.</p>
+                    </div>
+                    <div className="bg-slate-950/70 p-4 rounded-xl border border-white/5 space-y-1">
+                      <div className="text-2xl">🗺️ 2.</div>
+                      <h4 className="font-bold text-white text-base">Delivery Boy Route Optimizer</h4>
+                      <p className="text-slate-400 text-xs leading-relaxed">Smart GPS route clustering for active daily drops, completely skipping paused homes to save travel time and fuel.</p>
+                    </div>
+                    <div className="bg-slate-950/70 p-4 rounded-xl border border-white/5 space-y-1">
+                      <div className="text-2xl">💳 3.</div>
+                      <h4 className="font-bold text-white text-base">UPI AutoPay & WhatsApp Bill PDF</h4>
+                      <p className="text-slate-400 text-xs leading-relaxed">Automated 1st-of-the-month itemized PDF generation delivered via WhatsApp with 1-click UPI deep-link payment.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: DASHBOARD, PHONE SEARCH & PRO-RATED BILLING */}
+            {activeTab === 'dashboard' && (
+              <div className="space-y-6">
+                
+                {/* 4 Summary KPI Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="glass-card p-4 border-l-4 border-emerald-500">
+                    <span className="text-xs text-slate-400 font-medium">Active Subscriptions</span>
+                    <div className="text-3xl font-black text-white mt-1">{activeCount}</div>
+                    <span className="text-[11px] text-emerald-400">Receiving lunch</span>
+                  </div>
+                  <div className="glass-card p-4 border-l-4 border-amber-500">
+                    <span className="text-xs text-slate-400 font-medium">Today's Lunch Count</span>
+                    <div className="text-3xl font-black text-amber-400 mt-1">{activeCount} <span className="text-xs text-slate-400 font-normal">dabbas</span></div>
+                    <span className="text-[11px] text-slate-400">Weekdays delivery</span>
+                  </div>
+                  <div className="glass-card p-4 border-l-4 border-rose-500">
+                    <span className="text-xs text-slate-400 font-medium">Currently Paused</span>
+                    <div className="text-3xl font-black text-rose-400 mt-1">{pausedCount}</div>
+                    <span className="text-[11px] text-rose-400">On vacation / festival</span>
+                  </div>
+                  <div className="glass-card p-4 border-l-4 border-blue-500">
+                    <span className="text-xs text-slate-400 font-medium">Projected Monthly</span>
+                    <div className="text-3xl font-black text-white mt-1">₹18,300</div>
+                    <span className="text-[11px] text-slate-400">Auto-prorated at month end</span>
+                  </div>
+                </div>
+
+                {/* INSTANT PHONE SEARCH CARD (Problem brief centerpiece) */}
+                <div className="glass-card p-6 border border-amber-500/30">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        📞 Instant Phone Number Lookup
+                      </h3>
+                      <p className="text-xs text-slate-400">Search customer by phone to view current status, pause logs, and live bill</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-slate-400">Try demo:</span>
+                      <button onClick={() => handlePhoneSearch('9829012345')} className="px-2.5 py-1 rounded bg-slate-800 text-amber-400 border border-slate-700 hover:border-amber-500/50">
+                        Amit (Active)
+                      </button>
+                      <button onClick={() => handlePhoneSearch('9829054321')} className="px-2.5 py-1 rounded bg-slate-800 text-rose-400 border border-slate-700 hover:border-rose-500/50">
+                        Pooja (Paused)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="input-control w-full text-base font-mono pl-11"
+                      placeholder="Type phone number digits (e.g. 9829012345)..."
+                      value={phoneQuery}
+                      onChange={(e) => handlePhoneSearch(e.target.value)}
+                    />
+                    <span className="absolute left-4 top-3 text-slate-400">🔍</span>
+                  </div>
+
+                  {/* Matched Customer Live Card */}
+                  {matchedCustomer && (
+                    <div className="mt-4 p-4 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <h4 className="text-lg font-bold text-white">{matchedCustomer.name}</h4>
+                          <span className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full ${matchedCustomer.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>
+                            {matchedCustomer.status === 'ACTIVE' ? '● Active for Lunch' : '⏸️ Currently Paused'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1">📞 {matchedCustomer.phone} • 📍 {matchedCustomer.address}</p>
+                        <p className="text-xs text-amber-400 mt-0.5">🍱 Plan: {matchedCustomer.plan_name} (₹{matchedCustomer.monthly_price}/mo) • <em>{matchedCustomer.dietary_notes}</em></p>
+                        
+                        {matchedCustomer.pause_logs.length > 0 && (
+                          <div className="mt-2 text-xs text-rose-300">
+                            <strong>Recorded Pauses:</strong> {matchedCustomer.pause_logs.map(p => `${p.start_date} to ${p.end_date} (${p.reason})`).join(', ')}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 shrink-0">
+                        {matchedCustomer.status === 'PAUSED' ? (
+                          <button onClick={() => handleResume(matchedCustomer.subscription_id)} className="btn-secondary text-xs px-3 py-2 text-emerald-400 border-emerald-500/40">
+                            ▶ Resume Delivery
+                          </button>
+                        ) : (
+                          <button onClick={() => setPauseModal(matchedCustomer)} className="btn-secondary text-xs px-3 py-2 text-rose-400 border-rose-500/40">
+                            ⏸️ Set Pause
+                          </button>
+                        )}
+                        <button onClick={() => setBillModal(matchedCustomer)} className="btn-primary text-xs px-4 py-2">
+                          🧮 Compute Pro-Rated Bill
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* SUBSCRIBER TABLE WITH SEARCH, SORT & PAGINATION */}
+                <div className="glass-card p-6 space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <h3 className="text-lg font-bold text-white">All Subscribers & Monthly Subscriptions</h3>
+                    
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="text"
+                        placeholder="Search name, phone, address..."
+                        className="input-control text-xs w-60"
+                        value={search}
+                        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                      />
+                      <select
+                        className="input-control text-xs"
+                        value={statusFilter}
+                        onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                      >
+                        <option value="ALL">All Statuses</option>
+                        <option value="ACTIVE">Active Only</option>
+                        <option value="PAUSED">Paused Only</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10 text-slate-400 text-xs">
+                          <th className="pb-3 font-semibold">Subscriber</th>
+                          <th className="pb-3 font-semibold">Phone</th>
+                          <th className="pb-3 font-semibold">Plan & Meal Type</th>
+                          <th className="pb-3 font-semibold">Status</th>
+                          <th className="pb-3 font-semibold text-right">Actions & Billing</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {paginated.map(c => (
+                          <tr key={c.id} className="hover:bg-white/[0.02] transition">
+                            <td className="py-3">
+                              <div className="font-bold text-white">{c.name}</div>
+                              <div className="text-xs text-slate-400">{c.address}</div>
+                              {c.dietary_notes && <div className="text-[11px] text-amber-400/80">🥗 {c.dietary_notes}</div>}
+                            </td>
+                            <td className="py-3 font-mono text-slate-300 text-xs">{c.phone}</td>
+                            <td className="py-3">
+                              <div className="text-slate-200 font-medium">{c.plan_name}</div>
+                              <div className="text-xs text-amber-400">₹{c.monthly_price}/mo ({c.meal_type})</div>
+                            </td>
+                            <td className="py-3">
+                              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${c.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>
+                                {c.status}
+                              </span>
+                            </td>
+                            <td className="py-3 text-right">
+                              <div className="inline-flex gap-2">
+                                {c.status === 'PAUSED' ? (
+                                  <button onClick={() => handleResume(c.subscription_id)} className="px-2.5 py-1.5 rounded-lg text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20">
+                                    ▶ Resume
+                                  </button>
+                                ) : (
+                                  <button onClick={() => setPauseModal(c)} className="px-2.5 py-1.5 rounded-lg text-xs bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20">
+                                    ⏸️ Pause
+                                  </button>
+                                )}
+                                <button onClick={() => setBillModal(c)} className="btn-primary text-xs px-3 py-1.5">
+                                  🧮 Bill
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination Footer */}
+                  <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs text-slate-400">
+                    <div>Showing Page {currentPage} of {totalPages} ({filtered.length} subscribers)</div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="btn-secondary px-3 py-1 text-xs disabled:opacity-40"
+                      >
+                        Previous
+                      </button>
+                      <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage >= totalPages}
+                        className="btn-secondary px-3 py-1 text-xs disabled:opacity-40"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* TAB 3: KITCHEN DISPATCH BOARD */}
+            {activeTab === 'dispatch' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">👨‍🍳 Morning Kitchen Dispatch Board</h2>
+                    <p className="text-sm text-slate-400">Pre-sorts active lunch dabbas to cook vs paused subscribers on leave today</p>
+                  </div>
+                  <div className="bg-slate-800/80 px-4 py-2 rounded-xl border border-white/10 text-xs text-slate-300">
+                    📅 Target Date: <strong className="text-amber-400">Today (Weekday Delivery)</strong>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Active List */}
+                  <div className="glass-card p-6 border-t-4 border-emerald-500 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-emerald-400">✅ Cook & Pack ({activeCount} Dabbas)</h3>
+                      <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Mon–Fri Active</span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {customers.filter(c => c.status === 'ACTIVE').map(c => (
+                        <div key={c.id} className="p-3.5 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
+                          <div className="flex justify-between items-center">
+                            <h4 className="font-bold text-white text-sm">{c.name}</h4>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-300">{c.meal_type}</span>
+                          </div>
+                          <p className="text-xs text-slate-400">📞 {c.phone} • 📍 {c.address}</p>
+                          {c.dietary_notes && <p className="text-xs text-amber-400">⚠️ {c.dietary_notes}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Paused List */}
+                  <div className="glass-card p-6 border-t-4 border-rose-500 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-rose-400">🚫 Do Not Cook - Paused ({pausedCount})</h3>
+                      <span className="text-xs px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">Zero Billing Today</span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {customers.filter(c => c.status === 'PAUSED').map(c => (
+                        <div key={c.id} className="p-3.5 rounded-xl bg-rose-950/20 border border-rose-500/20 space-y-1">
+                          <div className="flex justify-between items-center">
+                            <h4 className="font-bold text-white text-sm">{c.name}</h4>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">On Leave</span>
+                          </div>
+                          <p className="text-xs text-slate-400">📞 {c.phone}</p>
+                          <p className="text-xs text-rose-300">
+                            🏖️ <strong>Reason:</strong> {c.pause_logs[0]?.reason || 'Customer requested pause'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </main>
+
+          {/* PAUSE MODAL */}
+          {pauseModal && (
+            <div className="modal-overlay">
+              <div className="glass-card max-w-md w-full p-6 space-y-4 relative animate-fade-in">
+                <button onClick={() => setPauseModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white">✕</button>
+                <h3 className="text-xl font-bold text-white">Pause Subscription</h3>
+                <p className="text-xs text-slate-400">For <strong>{pauseModal.name}</strong> ({pauseModal.phone})</p>
+
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.target;
+                  handlePauseSubmit(pauseModal.subscription_id, form.startDate.value, form.endDate.value, form.reason.value);
+                }} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-slate-400 block mb-1">Start Date</label>
+                      <input name="startDate" type="date" defaultValue="2026-09-14" required className="input-control w-full text-xs" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-400 block mb-1">End Date</label>
+                      <input name="endDate" type="date" defaultValue="2026-09-18" required className="input-control w-full text-xs" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">Reason for Leave</label>
+                    <input name="reason" type="text" defaultValue="Diwali Festival / Vacation" required className="input-control w-full text-xs" />
+                  </div>
+                  <div className="text-[11px] text-amber-400 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                    💡 Customer will not be billed for weekdays during this window.
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button type="button" onClick={() => setPauseModal(null)} className="btn-secondary text-xs px-4 py-2">Cancel</button>
+                    <button type="submit" className="btn-primary text-xs px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white">Confirm Pause</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* PRO-RATED BILLING MODAL (THE TWIST SOLUTION DISPLAY) */}
+          {billModal && (() => {
+            const math = calculateProratedMath(billModal.monthly_price, '2026-09', billModal.pause_logs);
+            return (
+              <div className="modal-overlay">
+                <div className="glass-card max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative animate-fade-in">
+                  <button onClick={() => setBillModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white">✕</button>
+                  
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Pro-Rated Month-End Invoice</h3>
+                      <p className="text-xs text-slate-400">Customer: <strong>{billModal.name}</strong> • Plan: {billModal.plan_name}</p>
+                    </div>
+                    <span className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-400 font-mono">
+                      Cycle: September 2026
+                    </span>
+                  </div>
+
+                  {/* FORMULA BREAKDOWN BOX */}
+                  <div className="bg-slate-950/80 p-4 rounded-xl border border-amber-500/30 space-y-3">
+                    <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block">
+                      Mathematical Pro-Rating Proof
+                    </span>
+                    <div className="grid grid-cols-3 md:grid-cols-5 gap-2 text-center text-xs">
+                      <div className="p-2 rounded bg-white/5">
+                        <div className="text-slate-400">Monthly Plan</div>
+                        <div className="font-bold text-white text-sm">₹{billModal.monthly_price}</div>
+                      </div>
+                      <div className="p-2 rounded bg-white/5">
+                        <div className="text-slate-400">Weekdays</div>
+                        <div className="font-bold text-white text-sm">{math.totalWeekdays}</div>
+                      </div>
+                      <div className="p-2 rounded bg-white/5">
+                        <div className="text-slate-400">Daily Rate</div>
+                        <div className="font-bold text-amber-400 text-sm">₹{math.dailyRate}</div>
+                      </div>
+                      <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/30">
+                        <div className="text-emerald-400">Delivered</div>
+                        <div className="font-bold text-emerald-300 text-sm">{math.deliveredWeekdays} days</div>
+                      </div>
+                      <div className="p-2 rounded bg-rose-500/10 border border-rose-500/30">
+                        <div className="text-rose-400">Paused</div>
+                        <div className="font-bold text-rose-300 text-sm">{math.pausedWeekdays} days</div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                      <div>
+                        <div className="text-xs text-slate-300">Formula: {math.deliveredWeekdays} delivered × ₹{math.dailyRate}/day</div>
+                        {math.savings > 0 && (
+                          <div className="text-xs text-emerald-400 font-semibold">🎉 Customer saved ₹{math.savings} on paused days!</div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] uppercase text-slate-400">Final Payable Amount</span>
+                        <div className="text-3xl font-black text-amber-400">₹{math.finalAmount}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ITEMIZED CALENDAR DAYS */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Itemized Day-by-Day Calendar (Sept 2026)</h4>
+                    <div className="max-h-48 overflow-y-auto border border-white/10 rounded-xl">
+                      <table className="w-full text-xs text-left">
+                        <thead className="bg-slate-900 sticky top-0 border-b border-white/10 text-slate-400">
+                          <tr>
+                            <th className="p-2">Date</th>
+                            <th className="p-2">Day</th>
+                            <th className="p-2">Status</th>
+                            <th className="p-2">Notes</th>
+                            <th className="p-2 text-right">Billed</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {math.schedule.map(d => (
+                            <tr key={d.date}>
+                              <td className="p-2 text-white font-mono">{d.date}</td>
+                              <td className="p-2 text-slate-400">{d.dayName}</td>
+                              <td className="p-2">
+                                {d.status === 'DELIVERED' && <span className="text-emerald-400 font-semibold">Delivered</span>}
+                                {d.status === 'PAUSED' && <span className="text-rose-400 font-semibold">Paused</span>}
+                                {d.status === 'WEEKEND' && <span className="text-slate-500">Weekend</span>}
+                              </td>
+                              <td className="p-2 text-slate-400">{d.reason || (d.status === 'DELIVERED' ? 'Lunch Served' : '-')}</td>
+                              <td className="p-2 text-right font-bold text-slate-200">
+                                {d.status === 'DELIVERED' ? `₹${math.dailyRate}` : '₹0'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex justify-between items-center pt-2">
+                    <button 
+                      onClick={() => {
+                        const billText = `🍱 TIFFINFLOW BILL: ${billModal.name}\nMonth: September 2026\nPlan: ${billModal.plan_name}\nDelivered Days: ${math.deliveredWeekdays}\nPaused Days: ${math.pausedWeekdays}\nFinal Pro-Rated Amount: ₹${math.finalAmount}\nSavings: ₹${math.savings}`;
+                        navigator.clipboard.writeText(billText);
+                        triggerNotification('Copied WhatsApp bill summary to clipboard!');
+                      }}
+                      className="btn-secondary text-xs px-3.5 py-2 flex items-center gap-1.5"
+                    >
+                      📲 Copy WhatsApp Bill
+                    </button>
+                    <button onClick={() => setBillModal(null)} className="btn-primary text-xs px-5 py-2">
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* NEW SUB MODAL */}
+          {newSubModal && (
+            <div className="modal-overlay">
+              <div className="glass-card max-w-md w-full p-6 space-y-4 relative animate-fade-in">
+                <button onClick={() => setNewSubModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">✕</button>
+                <h3 className="text-xl font-bold text-white">Add New Subscriber</h3>
+
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.target;
+                  handleAddSubscriber({
+                    id: Date.now(),
+                    subscription_id: Date.now(),
+                    name: form.fullName.value,
+                    phone: form.phone.value,
+                    address: form.address.value,
+                    dietary_notes: form.notes.value,
+                    plan_id: 1,
+                    plan_name: 'Ghar Ki Thali',
+                    monthly_price: 2200,
+                    meal_type: 'Veg',
+                    status: 'ACTIVE',
+                    pause_logs: []
+                  });
+                }} className="space-y-3">
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">Full Name</label>
+                    <input name="fullName" required placeholder="e.g. Yash Sharma" className="input-control w-full text-xs" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">Phone Number</label>
+                    <input name="phone" required placeholder="e.g. 9829911223" className="input-control w-full text-xs" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">Delivery Address</label>
+                    <input name="address" required placeholder="Flat 101, Mansarovar, Jaipur" className="input-control w-full text-xs" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">Dietary Notes</label>
+                    <input name="notes" placeholder="e.g. Less spicy, pure satvik" className="input-control w-full text-xs" />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button type="button" onClick={() => setNewSubModal(false)} className="btn-secondary text-xs px-4 py-2">Cancel</button>
+                    <button type="submit" className="btn-primary text-xs px-4 py-2">Activate Subscription</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-500">
+            🍱 TiffinFlow — Builder Round Evaluation • Fair Pro-Rated Weekday Billing Engine
+          </footer>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

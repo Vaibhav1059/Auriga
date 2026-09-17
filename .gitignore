@@ -1,0 +1,22 @@
+# Node dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Production builds
+dist/
+build/
+client/dist/
+
+# SQLite database file
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Environment & IDE
+.env
+.env.local
+.DS_Store
+.vscode/
+.idea/

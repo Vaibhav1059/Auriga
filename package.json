@@ -1,0 +1,28 @@
+{
+  "name": "tiffinflow",
+  "version": "1.0.0",
+  "description": "TiffinFlow — Home-Style Tiffin Subscription & Pro-Rated Billing Platform",
+  "main": "server/index.js",
+  "scripts": {
+    "setup": "npm install && npm --prefix server install && npm --prefix client install",
+    "seed": "npm --prefix server run seed",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"npm run dev:server\" \"npm run dev:client\"",
+    "build:client": "npm --prefix client run build",
+    "start": "npm --prefix server start",
+    "test": "node tests/billing.test.js"
+  },
+  "keywords": [
+    "tiffin",
+    "subscription",
+    "prorated-billing",
+    "codespaces",
+    "sqlite"
+  ],
+  "author": "Vaibhav",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

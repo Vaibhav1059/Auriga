@@ -151,16 +151,42 @@ function initSchema() {
       FOREIGN KEY (tenant_id) REFERENCES tenants(id)
     );
 
-    -- Idempotency Keys (For preventing double charge/pause)
-    CREATE TABLE IF NOT EXISTS idempotency_keys (
-      key TEXT PRIMARY KEY,
-      endpoint TEXT NOT NULL,
-      response_status INTEGER,
-      response_body TEXT,
+    -- Outbox for Morning Delivery Notifications (Level 1 Twist T1)
+    CREATE TABLE IF NOT EXISTS outbox (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      subscription_id INTEGER,
+      customer_id INTEGER,
+      recipient_phone TEXT NOT NULL,
+      recipient_name TEXT NOT NULL,
+      delivery_date TEXT NOT NULL,
+      message TEXT NOT NULL,
+      channel TEXT DEFAULT 'WHATSAPP',
+      status TEXT DEFAULT 'SENT',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- Subscription Mid-Cycle Transfers & Split Billing (Level 2 Twist T6)
+    CREATE TABLE IF NOT EXISTS subscription_transfers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      subscription_id INTEGER NOT NULL,
+      from_customer_id INTEGER NOT NULL,
+      to_customer_id INTEGER NOT NULL,
+      transfer_date TEXT NOT NULL,
+      billing_month TEXT NOT NULL,
+      customer_a_days INTEGER NOT NULL,
+      customer_a_amount REAL NOT NULL,
+      customer_b_days INTEGER NOT NULL,
+      customer_b_amount REAL NOT NULL,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (subscription_id) REFERENCES subscriptions(id),
+      FOREIGN KEY (from_customer_id) REFERENCES customers(id),
+      FOREIGN KEY (to_customer_id) REFERENCES customers(id)
+    );
+
     -- Indexes for high-speed lookups
+    CREATE INDEX IF NOT EXISTS idx_outbox_date ON outbox(delivery_date);
+    CREATE INDEX IF NOT EXISTS idx_transfers_sub ON subscription_transfers(subscription_id);
     CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
     CREATE INDEX IF NOT EXISTS idx_customers_locality ON customers(locality);
     CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);

@@ -79,20 +79,74 @@ The server will now serve both the REST API and the frontend at `http://localhos
 
 ## 🧪 Running Automated Tests
 
-Run the complete 8-test unit test suite verifying weekday calculations, 6-day corporate plans, 9:00 AM same-day cutoff evaluation, and GST tax invoicing:
+Run the complete 12-test automated verification suite covering both baseline billing math and all 3 official Level 1, 2, and 3 Twists:
 ```bash
 npm test
 ```
 
 ### Test Suite Coverage:
-- `Test 1`: Weekday / Weekend identification and 6-day (Mon-Sat) delivery check.
-- `Test 2`: Full month zero-pause baseline with 5% GST (2.5% CGST + 2.5% SGST).
-- `Test 3`: 5-weekday pause pro-rated discount calculation.
-- `Test 4`: Pause period spanning across a weekend (ensures weekends are not double-deducted).
-- `Test 5`: Mid-month subscription start pro-rating.
-- `Test 6`: 6-day corporate plan delivery day verification.
-- `Test 7`: Strict 9:00 AM IST cutoff policy evaluation.
-- `Test 8`: GST HSN/SAC 996331 invoice and tax split validation.
+- **Baseline Pro-Rated Billing Suite (`tests/billing.test.js`)**:
+  - `Test 1`: Weekday / Weekend identification and 6-day (Mon-Sat) delivery check.
+  - `Test 2`: Full month zero-pause baseline with 5% GST (2.5% CGST + 2.5% SGST).
+  - `Test 3`: 5-weekday pause pro-rated discount calculation.
+  - `Test 4`: Pause period spanning across a weekend (ensures weekends are not double-deducted).
+  - `Test 5`: Mid-month subscription start pro-rating.
+  - `Test 6`: 6-day corporate plan delivery day verification.
+  - `Test 7`: Strict 9:00 AM IST cutoff policy evaluation.
+  - `Test 8`: GST HSN/SAC 996331 invoice and tax split validation.
+- **Official Twists Suite (`tests/twists.test.js`)**:
+  - `Level 1 — T1 (Integrate)`: Morning delivery notification dispatch evaluated on weekdays and Sundays; verified via `GET /outbox` after `POST /clock`.
+  - `Level 2 — T6 (Lifecycle)`: Mid-cycle subscription transfer with carried-over plan and exact pro-rated mathematical split billing between Customer A and Customer B.
+  - `Level 3 — T4 (Messy Data)`: Cleansing noisy customer spreadsheets with mixed date formats (DD/MM/YYYY, ISO, textual dates), duplicate phones, and blanks; generates `{ imported, deduped, rejected }` report.
+
+---
+
+## ⚡ The 3 Official Twists Implementation Details
+
+### 1. Level 1 — T1 (Integrate): Morning Clock & Notification Outbox
+- **`POST /clock` & `POST /api/clock`**:
+  - Accepts `{ "date": "YYYY-MM-DD" }` (defaults to current date).
+  - Checks if date is a delivery day (Monday-Friday).
+  - Selects all active subscribers who are NOT paused on this date.
+  - Formats personalized morning meal dispatch notifications and inserts into the `outbox` table.
+- **`GET /outbox` & `GET /api/outbox`**:
+  - Returns queued morning delivery notifications `{ count, outbox: [...], notifications: [...] }`.
+- **`DELETE /outbox` & `DELETE /api/outbox`**:
+  - Clears outbox records for test isolation.
+
+### 2. Level 2 — T6 (Lifecycle): Mid-Cycle Subscription Transfer & Split Billing
+- **`POST /subscriptions/:id/transfer` & `POST /api/subscriptions/:id/transfer`**:
+  - Accepts `{ "to_customer_id" }` OR `{ "new_name", "new_phone", "new_address" }` along with `transfer_date`.
+  - Reassigns subscription to the recipient while preserving plan and cycle continuity.
+  - Computes exact mathematical pro-rated bill:
+    - **Customer A**: Billed for weekdays served before `transfer_date` minus any vacation pauses.
+    - **Customer B**: Billed for weekdays served from `transfer_date` to month-end.
+    - Sum of days served strictly equals total active cycle days.
+  - Records transaction in `subscription_transfers` table and immutable audit logs.
+
+### 3. Level 3 — T4 (Messy Data): Customer Importer & Deduplicator
+- **`POST /customers/import` & `POST /api/customers/import`**:
+  - Accepts raw JSON array or CSV format.
+  - Cleans 10-digit phone numbers (stripping `+91`, `0`, spaces, dashes).
+  - Normalizes multiple date formats (`DD/MM/YYYY`, `MM/DD/YYYY`, `YYYY-MM-DD`, `1st October 2026`) to canonical `YYYY-MM-DD`.
+  - Deduplicates against the incoming batch and existing database records.
+  - Rejects records missing names, phone digits, or with corrupt unparseable dates.
+  - Returns required report format:
+    ```json
+    {
+      "imported": 3,
+      "deduped": 2,
+      "rejected": 3,
+      "details": { "imported": [...], "deduped": [...], "rejected": [...] }
+    }
+    ```
+
+---
+
+## 🎨 Modular Architecture (Zero Inline CSS)
+- **`style.css`**: Dedicated external design system stylesheet managing all CSS variables (`--bg-primary`, `--color-amber`, etc.), glass cards, buttons, badges, KDS high contrast styles, and modal components.
+- **`app.js`**: Modular React application containing state, business logic, and UI views.
+- **`preview.html`**: Clean HTML shell linking `style.css` and loading `app.js`.
 
 ---
 

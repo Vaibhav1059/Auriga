@@ -206,3 +206,59 @@ To take TiffinFlow from a prototype to a full production-level SaaS platform, he
    - Synced `README.md`, `REASONING.md`, and `AI_LOGS.md` with full enterprise specifications.
 6. **Git Push**:
    - Staged all changes and pushed directly to `https://github.com/Vaibhav1059/Auriga`.
+
+---
+
+## Turn 9: UI / UX Layout Audit & Two-Tier Header Refactor
+
+### User Request:
+```
+Perform a comprehensive audit. The latest code updates broke UI layout, responsiveness, and alignment. Refactor the header and navigation to ensure zero text wrapping, responsive styling, and clean visual hierarchy.
+```
+
+### AI Execution:
+1. Conducted root-cause diagnosis identifying header crowding between brand identity, tab buttons, theme toggle, and CTAs.
+2. Refactored into a **Two-Tier Header Architecture**:
+   - **Tier 1**: Brand logo, enterprise GSTIN subtitle, live backend health indicator, light/dark mode switch, and primary "+ Add Subscriber" CTA.
+   - **Tier 2**: Sub-navigation with pill-shaped tabs featuring `whitespace-nowrap` and `.no-scrollbar` horizontal overflow scroll.
+3. Enhanced table layout and responsive grid containers for KDS and Driver views.
+
+---
+
+## Turn 10: Official Twists (T1, T6, T4) & Modular Clean Architecture
+
+### User Request:
+```
+untill now okk now we have some updates on our pronlem statement like till now waht we have done see like the mail storytelling or problem statement after that we have some Twists for this problem:
+Level 1 — T1 (integrate): “Each morning, notify the customers due a delivery today (active, a weekday, not paused) via the Notification Service.” Graded via /outbox after POST /clock.
+Level 2 — T6 (lifecycle): “Transfer a subscription to a new customer mid-cycle; the plan and cycle carry over, billing splits by who was served.”
+Level 3 — T4 (messy data): “Import a messy customer list (dup phones, mixed date formats, blanks) into clean subscriptions with an { imported, deduped, rejected } report.” so go for it complete the task
+add also i want to say no inline css or etc on a new page style.css which mange the css other things should also be seperate so that are product can become scalable and more reliable and easy for debugging in future. and then proceed with our implementation plan and make sure to consider responsive ness and ui/ux properly
+```
+
+### AI Execution:
+1. **Zero Inline CSS & Modular Design System (`style.css`)**:
+   - Consolidated 100% of styling tokens, glass cards, buttons, badges, KDS high contrast styles, and modal components into an external `style.css` stylesheet.
+   - Completely eradicated all inline styles across the frontend for maximum scalability, maintainability, and clean debugging.
+2. **Separation of Application Logic (`app.js` & `preview.html`)**:
+   - Decoupled ~1,400 lines of React logic and state management from `preview.html` into a dedicated `app.js` module.
+   - Refactored `preview.html` into a lightweight, pristine HTML shell.
+   - Configured Express server (`server/index.js`) to serve `preview.html`, `style.css`, and `app.js` on `http://localhost:5000/`.
+3. **Level 1 — T1 (Integrate): Morning Delivery Clock & Outbox**:
+   - Implemented `POST /clock` and `GET /outbox` (mounted at both `/` and `/api/*` for autograder compatibility).
+   - Created `outbox` table in SQLite (`server/db/database.js`).
+   - Automatically filters active, weekday subscribers who are NOT on vacation pause, formatting personalized morning WhatsApp delivery messages.
+   - Added interactive "⏰ Morning Clock / Outbox" modal in the UI with live notification feed.
+4. **Level 2 — T6 (Lifecycle): Mid-Cycle Subscription Transfer & Split Billing**:
+   - Implemented `POST /subscriptions/:id/transfer` (and `/api/subscriptions/:id/transfer`).
+   - Created `subscription_transfers` table and audit trail logging.
+   - Implemented exact mathematical split billing in `server/utils/billingCalculator.js`: Customer A is billed for days before transfer date minus pauses, Customer B for days from transfer date onwards; sum of days equals active cycle days.
+   - Added interactive "🔄 Transfer" action on subscriber cards with real-time side-by-side split bill preview.
+5. **Level 3 — T4 (Messy Data): Customer Importer & Deduplicator**:
+   - Built `server/utils/dataCleaner.js` standardizing 10-digit Indian phones and parsing ISO, DD/MM/YYYY, MM/DD/YYYY, and textual dates.
+   - Implemented `POST /customers/import` returning exact `{ imported, deduped, rejected, details }` structure.
+   - Added "📥 Bulk Import Messy List (T4)" modal with benchmark test dataset and live 3-stat report cards.
+6. **Automated Verification**:
+   - Created `tests/twists.test.js` with idempotent test cases for T1, T6, and T4.
+   - Executed `npm test` verifying all 8 baseline billing tests and all 3 twists tests pass with 100% precision.
+

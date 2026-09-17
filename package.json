@@ -11,7 +11,7 @@
     "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"npm run dev:server\" \"npm run dev:client\"",
     "build:client": "npm --prefix client run build",
     "start": "npm --prefix server start",
-    "test": "node tests/billing.test.js"
+    "test": "node tests/billing.test.js && node tests/twists.test.js"
   },
   "keywords": [
     "tiffin",

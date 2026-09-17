@@ -119,15 +119,46 @@ All calculations are rounded to 2 decimal places.
 
 ---
 
-## 6. Testing & Quality Assurance
+## 7. The 3 Official Twists: Engineering Solutions
 
-### Automated Unit Test Suite (`tests/billing.test.js`)
-All 8 test suites pass with 100% precision:
-1. **Weekday vs Weekend & 6-Day Check:** Confirms correct weekday and Saturday delivery checks.
-2. **Zero-Pause Month with 5% GST:** 22 weekdays in Sept 2026 produce exact ₹2,200 taxable + ₹55 CGST + ₹55 SGST = ₹2,310 final amount.
-3. **5-Day Vacation Pause:** 5-day pause (Sept 14–18) at ₹100/day produces a ₹1,700 bill and ₹500 customer savings.
-4. **Pause Overlapping Weekend:** Friday-to-Tuesday pause deducts exactly 3 weekdays, not 5.
-5. **Mid-Month Start:** Starting on Sept 15 accurately excludes the prior 10 weekdays.
-6. **6-Day Plan Delivery Check:** Correctly includes Saturdays (26 delivery days).
-7. **9:00 AM Strict Cutoff Policy:** Evaluates before vs after cutoff accurately.
-8. **GST HSN/SAC 996331 Invoice Breakdown:** Validates CGST/SGST tax split.
+### Level 1 — T1 (Integrate): Morning Clock & Notification Outbox
+* **Problem Requirement:** *"Each morning, notify the customers due a delivery today (active, a weekday, not paused) via the Notification Service. Graded via `/outbox` after `POST /clock`."*
+* **Design Decision & Architecture:**
+  - Automated evaluation suites grade `/outbox` immediately after `POST /clock`. We mounted these endpoints at both the root (`/clock`, `/outbox`) and namespaced `/api` paths for autograder compatibility.
+  - When `POST /clock` is invoked with `{ "date": "YYYY-MM-DD" }`:
+    1. It evaluates `is_delivery_day(date)`. On weekends, 0 notifications are generated.
+    2. It queries active subscribers whose `start_date <= date` and joins `pause_logs` to ensure there are no overlapping active pauses on this date.
+    3. For every eligible customer, it generates a personalized morning delivery dispatch message and commits it to the persistent `outbox` table.
+  - Test suites verify both weekday notification generation and weekend 0-notification invariants.
+
+### Level 2 — T6 (Lifecycle): Mid-Cycle Subscription Transfer & Split Billing
+* **Problem Requirement:** *"Transfer a subscription to a new customer mid-cycle; the plan and cycle carry over, billing splits by who was served."*
+* **Design Decision & Architecture:**
+  - `POST /subscriptions/:id/transfer` accepts `{ to_customer_id, transfer_date, notes }` or recipient customer details.
+  - The plan and monthly cycle carry over seamlessly.
+  - **Mathematical Split Formula:**
+    - Let $D_{\text{cycle}}$ be total delivery weekdays in the month.
+    - Daily rate: $R = \text{monthly\_price} / D_{\text{cycle}}$.
+    - **Customer A** is billed for weekdays from month start to $\text{transfer\_date} - 1$ minus Customer A's confirmed pauses: $T_A = \text{days}_A \times R$.
+    - **Customer B** is billed for weekdays from $\text{transfer\_date}$ to month end: $T_B = \text{days}_B \times R$.
+    - Invariant: $\text{days}_A + \text{days}_B = \text{total delivered weekdays}$.
+    - Both parties receive 5% GST calculated on their respective taxable amounts.
+  - The subscription's `customer_id` is transferred, and an entry is logged in `subscription_transfers` and `audit_logs`.
+
+### Level 3 — T4 (Messy Data): Customer Importer & Deduplication Report
+* **Problem Requirement:** *"Import a messy customer list (dup phones, mixed date formats, blanks) into clean subscriptions with an { imported, deduped, rejected } report."*
+* **Design Decision & Architecture:**
+  - Standardizes Indian phone numbers into canonical 10-digit format (removing `+91`, `0`, dashes, spaces, parentheses).
+  - Robust date parser handles ISO (`YYYY-MM-DD`), Indian (`DD/MM/YYYY`), US (`MM/DD/YYYY`), and textual formats (`1st October 2026`).
+  - **Deduplication Strategy:** Tracks phones within the incoming batch AND queries active database records. Duplicate occurrences are marked as `deduped`.
+  - Missing customer names, invalid phone lengths, or unparseable dates are categorized as `rejected` with descriptive error causes.
+  - Commits valid records to the database and returns `{ imported, deduped, rejected, details }`.
+
+---
+
+## 8. Modular Architecture & Clean Code Separation
+
+* **Zero Inline CSS Policy:** All styling is consolidated in [`style.css`](style.css) using design tokens (`--bg-primary`, `--color-amber`, etc.), glassmorphic components, and responsive grid layouts.
+* **Separation of Application Logic:** Client-side React logic is decoupled into [`app.js`](app.js), making `preview.html` a lightweight, maintainable HTML shell that is easy to debug, scale, and test.
+* **Server-Served Static Assets:** `server/index.js` serves `preview.html`, `style.css`, and `app.js` directly on `http://localhost:5000/`, enabling testing with zero CORS obstacles.
+

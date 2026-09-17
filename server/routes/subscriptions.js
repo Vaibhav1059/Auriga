@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const authMiddleware = require('../middleware/auth');
-const { isWeekday } = require('../utils/billingCalculator');
+const { isWeekday, calculateSplitSubscriptionBill } = require('../utils/billingCalculator');
 
 // GET /api/subscriptions/stats - High-level metrics for owner dashboard
 router.get('/stats', (req, res) => {
@@ -235,6 +235,156 @@ router.post('/:id/resume', authMiddleware, (req, res) => {
   } catch (err) {
     console.error('Resume error:', err);
     res.status(500).json({ error: 'Failed to resume subscription.' });
+  }
+});
+
+/**
+ * Level 2 — T6 (lifecycle):
+ * “Transfer a subscription to a new customer mid-cycle; the plan and cycle carry over, billing splits by who was served.”
+ * POST /api/subscriptions/:id/transfer and POST /subscriptions/:id/transfer
+ */
+router.post('/:id/transfer', (req, res) => {
+  const subscriptionId = req.params.id;
+  const { 
+    to_customer_id, 
+    new_name, 
+    new_phone, 
+    new_address, 
+    new_locality,
+    transfer_date,
+    notes = 'Mid-cycle subscription transfer'
+  } = req.body;
+
+  if (!transfer_date) {
+    return res.status(400).json({ error: 'transfer_date (YYYY-MM-DD) is required.' });
+  }
+
+  try {
+    // 1. Validate subscription
+    const sub = db.prepare(`
+      SELECT s.*, p.monthly_price, p.delivery_days_per_week, p.name AS plan_name, c.name AS cust_a_name, c.phone AS cust_a_phone
+      FROM subscriptions s
+      JOIN plans p ON p.id = s.plan_id
+      JOIN customers c ON c.id = s.customer_id
+      WHERE s.id = ?
+    `).get(subscriptionId);
+
+    if (!sub) {
+      return res.status(404).json({ error: 'Subscription not found.' });
+    }
+
+    if (sub.status === 'CANCELLED') {
+      return res.status(400).json({ error: 'Cannot transfer a cancelled subscription.' });
+    }
+
+    const fromCustomerId = sub.customer_id;
+
+    // 2. Resolve recipient Customer B
+    let targetCustomerId = to_customer_id;
+
+    if (!targetCustomerId) {
+      if (!new_name || !new_phone) {
+        return res.status(400).json({ error: 'Either to_customer_id OR (new_name, new_phone) must be provided.' });
+      }
+
+      // Find or create customer
+      const existingCust = db.prepare('SELECT id, name, phone FROM customers WHERE phone LIKE ?').get(`%${new_phone.slice(-10)}%`);
+      if (existingCust) {
+        targetCustomerId = existingCust.id;
+      } else {
+        const createResult = db.prepare(`
+          INSERT INTO customers (name, phone, address, locality, dietary_notes)
+          VALUES (?, ?, ?, ?, 'Transferred subscriber')
+        `).run(new_name, new_phone, new_address || 'Jaipur', new_locality || 'Malviya Nagar');
+        targetCustomerId = createResult.lastInsertRowid;
+      }
+    }
+
+    if (Number(fromCustomerId) === Number(targetCustomerId)) {
+      return res.status(400).json({ error: 'Cannot transfer subscription to the same customer.' });
+    }
+
+    const custB = db.prepare('SELECT id, name, phone, address FROM customers WHERE id = ?').get(targetCustomerId);
+    if (!custB) {
+      return res.status(404).json({ error: 'Target recipient customer not found.' });
+    }
+
+    // 3. Compute mid-cycle split billing
+    const billingMonth = transfer_date.substring(0, 7); // e.g. "2026-09"
+    const pauseLogsA = db.prepare(`
+      SELECT * FROM pause_logs
+      WHERE subscription_id = ? AND status = 'CONFIRMED'
+    `).all(subscriptionId);
+
+    const splitBilling = calculateSplitSubscriptionBill({
+      monthlyPrice: sub.monthly_price,
+      billingMonth,
+      transferDate: transfer_date,
+      pauseLogsA,
+      pauseLogsB: [],
+      daysPerWeek: sub.delivery_days_per_week || 5,
+      includeGst: true
+    });
+
+    // 4. Update subscription ownership
+    db.prepare(`
+      UPDATE subscriptions 
+      SET customer_id = ?, notes = ?
+      WHERE id = ?
+    `).run(targetCustomerId, `Transferred from ${sub.cust_a_name} on ${transfer_date}. ${notes}`, subscriptionId);
+
+    // 5. Record immutable record in subscription_transfers table
+    const transferRecord = db.prepare(`
+      INSERT INTO subscription_transfers (
+        subscription_id, from_customer_id, to_customer_id, transfer_date, billing_month,
+        customer_a_days, customer_a_amount, customer_b_days, customer_b_amount, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      subscriptionId,
+      fromCustomerId,
+      targetCustomerId,
+      transfer_date,
+      billingMonth,
+      splitBilling.customer_a.daysServed,
+      splitBilling.customer_a.finalAmount,
+      splitBilling.customer_b.daysServed,
+      splitBilling.customer_b.finalAmount,
+      notes
+    );
+
+    // 6. Record Audit Log
+    db.prepare(`
+      INSERT INTO audit_logs (tenant_id, actor_name, actor_role, action, entity_type, entity_id, details)
+      VALUES (1, 'System', 'owner', 'SUBSCRIPTION_TRANSFERRED', 'SUBSCRIPTION', ?, ?)
+    `).run(
+      subscriptionId,
+      `Transferred mid-cycle from ${sub.cust_a_name} (${sub.cust_a_phone}) to ${custB.name} (${custB.phone}) on ${transfer_date}. Split: ₹${splitBilling.customer_a.finalAmount} / ₹${splitBilling.customer_b.finalAmount}`
+    );
+
+    res.json({
+      success: true,
+      message: `Subscription successfully transferred to ${custB.name} on ${transfer_date}.`,
+      transfer_id: transferRecord.lastInsertRowid,
+      subscription_id: Number(subscriptionId),
+      plan_name: sub.plan_name,
+      billing_month: billingMonth,
+      transfer_date: transfer_date,
+      from_customer: {
+        id: fromCustomerId,
+        name: sub.cust_a_name,
+        phone: sub.cust_a_phone
+      },
+      to_customer: {
+        id: custB.id,
+        name: custB.name,
+        phone: custB.phone
+      },
+      billing_split: splitBilling
+    });
+
+  } catch (err) {
+    console.error('Subscription transfer error:', err);
+    res.status(500).json({ error: 'Failed to transfer subscription', details: err.message });
   }
 });
 

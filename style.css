@@ -1,0 +1,328 @@
+/* ==========================================================================
+   TiffinFlow Design System & Modular Stylesheet (style.css)
+   Clean Separation of Styles: Zero Inline CSS, Modular & Scalable
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Dynamic Theme Tokens (Light & Dark Modes)
+   -------------------------------------------------------------------------- */
+html[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --border-color: #e2e8f0;
+  --border-focus: #d97706;
+  --color-amber: #d97706;
+  --color-amber-light: #f59e0b;
+  --color-amber-glow: rgba(217, 119, 6, 0.12);
+  --color-emerald: #059669;
+  --color-emerald-glow: rgba(5, 150, 105, 0.12);
+  --color-rose: #e11d48;
+  --color-rose-glow: rgba(225, 29, 72, 0.12);
+  --color-blue: #2563eb;
+  --color-blue-glow: rgba(37, 99, 235, 0.12);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+}
+
+html[data-theme="dark"] {
+  --bg-primary: #0b1120;
+  --bg-surface: #131d33;
+  --bg-card: rgba(23, 37, 66, 0.75);
+  --bg-card-hover: rgba(30, 48, 86, 0.85);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-focus: #f59e0b;
+  --color-amber: #f59e0b;
+  --color-amber-light: #fbbf24;
+  --color-amber-glow: rgba(245, 158, 11, 0.18);
+  --color-emerald: #10b981;
+  --color-emerald-glow: rgba(16, 185, 129, 0.18);
+  --color-rose: #f43f5e;
+  --color-rose-glow: rgba(244, 63, 94, 0.18);
+  --color-blue: #3b82f6;
+  --color-blue-glow: rgba(59, 130, 246, 0.18);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* --------------------------------------------------------------------------
+   2. Typography & Global Layout
+   -------------------------------------------------------------------------- */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.015em;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* --------------------------------------------------------------------------
+   3. Glassmorphism & Cards
+   -------------------------------------------------------------------------- */
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.2s ease;
+}
+.glass-card:hover {
+  border-color: var(--border-focus);
+}
+
+/* --------------------------------------------------------------------------
+   4. Button Component System (No wrapping, responsive micro-interactions)
+   -------------------------------------------------------------------------- */
+.btn-primary {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0b1120;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.45);
+}
+
+.btn-secondary {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-secondary:hover {
+  border-color: var(--border-focus);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+}
+.btn-accent:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   5. Status Badges & Pills
+   -------------------------------------------------------------------------- */
+.badge-active {
+  background: var(--color-emerald-glow);
+  color: var(--color-emerald);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.badge-paused {
+  background: var(--color-rose-glow);
+  color: var(--color-rose);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+.badge-transferred {
+  background: var(--color-blue-glow);
+  color: var(--color-blue);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Report Stat Cards for Messy Data Importer (T4) */
+.stat-card-imported {
+  background: var(--color-emerald-glow);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 12px;
+  padding: 16px;
+}
+.stat-card-deduped {
+  background: var(--color-amber-glow);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 12px;
+  padding: 16px;
+}
+.stat-card-rejected {
+  background: var(--color-rose-glow);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   6. Form Controls & Inputs
+   -------------------------------------------------------------------------- */
+.input-control {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  outline: none;
+  transition: all 0.2s ease;
+  font-size: 0.8125rem;
+}
+.input-control:focus {
+  border-color: var(--color-amber);
+  box-shadow: 0 0 0 3px var(--color-amber-glow);
+}
+
+/* --------------------------------------------------------------------------
+   7. Modal Overlay & Dialog Containers
+   -------------------------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.modal-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* --------------------------------------------------------------------------
+   8. Level 1 (T1) Outbox Notification Feed Styling
+   -------------------------------------------------------------------------- */
+.outbox-card {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  padding: 14px;
+  transition: all 0.15s ease;
+}
+.outbox-card:hover {
+  border-color: var(--color-amber);
+}
+
+.outbox-message-bubble {
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   9. Level 2 (T6) Split Billing Breakdown Side-by-Side Cards
+   -------------------------------------------------------------------------- */
+.split-card-a {
+  background: rgba(217, 119, 6, 0.06);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  border-radius: 14px;
+  padding: 16px;
+}
+.split-card-b {
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   10. Sub-Navigation & Scrolling Utilities
+   -------------------------------------------------------------------------- */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* --------------------------------------------------------------------------
+   11. KDS TV High Contrast Styles
+   -------------------------------------------------------------------------- */
+.kds-tv {
+  background: #020617;
+  color: #f8fafc;
+}
+.kds-card {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+}
+
+/* --------------------------------------------------------------------------
+   12. WhatsApp Chat Bubbles
+   -------------------------------------------------------------------------- */
+.chat-bubble-user {
+  background: #d9fdd3;
+  color: #111b21;
+  border-radius: 12px 12px 2px 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.chat-bubble-bot {
+  background: #ffffff;
+  color: #111b21;
+  border-radius: 12px 12px 12px 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+[data-theme="dark"] .chat-bubble-user {
+  background: #005c4b;
+  color: #e9edef;
+}
+[data-theme="dark"] .chat-bubble-bot {
+  background: #202c33;
+  color: #e9edef;
+}
+
+/* --------------------------------------------------------------------------
+   13. Responsive Utilities
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .btn-primary, .btn-secondary {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+}

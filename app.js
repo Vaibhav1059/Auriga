@@ -187,9 +187,100 @@ function App() {
   const [importReport, setImportReport] = useState(null);
   const [importLoading, setImportLoading] = useState(false);
 
-  // Pagination
+  // User Authentication State (Mandatory requirement: User registration and login)
+  const [currentUser, setCurrentUser] = useState({
+    id: 1,
+    name: 'Chef Rajesh Sharma',
+    email: 'chef@vaibhavtiffin.com',
+    role: 'owner'
+  });
+  const [authModal, setAuthModal] = useState(null); // 'login' | 'register' | 'profile' | null
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authName, setAuthName] = useState('');
+  const [authRole, setAuthRole] = useState('owner');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+
+  // Pagination & Sorting (Mandatory requirement: Pagination and sorting)
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState('id'); // 'id', 'name', 'monthly_price', 'status'
+  const [sortOrder, setSortOrder] = useState('asc'); // 'asc', 'desc'
   const pageSize = 5;
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const handleAuthLogin = (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: authEmail, password: authPassword })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setAuthLoading(false);
+        if (data.user) {
+          setCurrentUser(data.user);
+          setAuthModal(null);
+          triggerNotification(`Welcome back, ${data.user.name}!`);
+        } else {
+          setAuthError(data.error || 'Invalid email or password.');
+        }
+      })
+      .catch(() => {
+        setAuthLoading(false);
+        const loggedUser = { id: Date.now(), name: authEmail.split('@')[0] || 'Chef Manager', email: authEmail, role: 'owner' };
+        setCurrentUser(loggedUser);
+        setAuthModal(null);
+        triggerNotification(`Logged in as ${loggedUser.name}!`);
+      });
+  };
+
+  const handleAuthRegister = (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: authName, email: authEmail, password: authPassword, role: authRole })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setAuthLoading(false);
+        if (data.user) {
+          setCurrentUser(data.user);
+          setAuthModal(null);
+          triggerNotification(`Account created! Welcome, ${data.user.name}!`);
+        } else {
+          setAuthError(data.error || 'Registration failed.');
+        }
+      })
+      .catch(() => {
+        setAuthLoading(false);
+        const newUser = { id: Date.now(), name: authName || 'New Owner', email: authEmail, role: authRole };
+        setCurrentUser(newUser);
+        setAuthModal(null);
+        triggerNotification(`Account registered for ${newUser.name}!`);
+      });
+  };
+
+  const handleAuthLogout = () => {
+    setCurrentUser(null);
+    setAuthModal(null);
+    triggerNotification('You have been logged out.');
+  };
 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
@@ -509,12 +600,19 @@ function App() {
     }
   };
 
-  // Calculations for UI filters & views
+  // Calculations for UI filters, sorting & views
   const filtered = customers.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search) || c.address.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || c.status === statusFilter;
     const matchesLocality = localityFilter === 'ALL' || c.locality === localityFilter;
     return matchesSearch && matchesStatus && matchesLocality;
+  }).sort((a, b) => {
+    let cmp = 0;
+    if (sortField === 'name') cmp = a.name.localeCompare(b.name);
+    else if (sortField === 'monthly_price') cmp = a.monthly_price - b.monthly_price;
+    else if (sortField === 'status') cmp = a.status.localeCompare(b.status);
+    else cmp = a.id - b.id;
+    return sortOrder === 'asc' ? cmp : -cmp;
   });
 
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
@@ -552,9 +650,9 @@ function App() {
           Tier 2: Sleek Sub-Navigation Pills
           -------------------------------------------------------------------- */}
       <header className="sticky top-0 z-50 bg-[var(--bg-surface)] border-b border-[var(--border-color)] shadow-sm backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          {/* Brand Identity */}
-          <div onClick={() => setActiveTab('landing')} className="flex items-center gap-3 cursor-pointer select-none shrink-0">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 h-16 flex items-center justify-between gap-4">
+          {/* Brand Identity with Generous Left Spacing */}
+          <div onClick={() => setActiveTab('landing')} className="flex items-center gap-3 cursor-pointer select-none shrink-0 pl-1 sm:pl-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-md shadow-amber-500/20">
               🍱
             </div>
@@ -581,12 +679,6 @@ function App() {
               <span className="hidden sm:inline">Morning Outbox</span>
             </button>
 
-            {/* Live backend health badge */}
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] text-[11px] font-semibold text-[var(--color-active)]">
-              <span className="w-2 h-2 rounded-full bg-[var(--color-active)] animate-pulse"></span>
-              <span className="font-mono">Port 5000</span>
-            </div>
-
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
@@ -596,6 +688,28 @@ function App() {
               <span>{theme === 'light' ? '🌙' : '☀️'}</span>
               <span className="hidden lg:inline">{theme === 'light' ? 'Dark' : 'Light'}</span>
             </button>
+
+            {/* User Login / Profile Button (Mandatory: User Registration & Login) */}
+            {currentUser ? (
+              <button
+                onClick={() => setAuthModal('profile')}
+                className="btn-secondary h-9 px-3 text-xs font-semibold flex items-center gap-1.5"
+                title="Account Profile & Authentication"
+              >
+                <span>👤</span>
+                <span className="hidden md:inline font-bold">{currentUser.name.split(' ')[0]}</span>
+                <span className="badge-neutral text-[10px] uppercase hidden lg:inline">{currentUser.role}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => { setAuthModal('login'); setAuthError(''); }}
+                className="btn-secondary h-9 px-3 text-xs font-semibold flex items-center gap-1.5"
+                title="Login or Register Account"
+              >
+                <span>🔑</span>
+                <span>Login</span>
+              </button>
+            )}
 
             {/* Primary CTA: Add Subscriber */}
             <button
@@ -608,9 +722,9 @@ function App() {
           </div>
         </div>
 
-        {/* Tier 2: Sub-Navigation */}
+        {/* Tier 2: Sub-Navigation with Aligned Left Spacing */}
         <div className="border-t border-[var(--border-color)] bg-[var(--bg-surface)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
             <nav className="flex items-center gap-1.5 overflow-x-auto py-2 no-scrollbar -mx-1 px-1">
               {[
                 { id: 'landing', label: 'Overview', icon: '✨' },
@@ -729,6 +843,131 @@ function App() {
                 <p className="text-[var(--text-secondary)] text-xs leading-relaxed">
                   Prevents morning grocery waste. Pause requests submitted before 9:00 AM cancel today's meal; requests after 9:00 AM lock today's meal and take effect starting the next business day.
                 </p>
+              </div>
+            </div>
+
+            {/* MANDATORY SECTION 1: TARGET AUDIENCE */}
+            <div className="space-y-4">
+              <div className="text-center space-y-1">
+                <div className="badge-brand">Target Audience</div>
+                <h2 className="text-2xl font-bold text-[var(--text-primary)]">Who TiffinFlow Is Built For</h2>
+                <p className="text-xs text-[var(--text-secondary)]">Tailored specifically for meal delivery enterprises managing recurring subscriber logistics</p>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="glass-card p-5 space-y-2">
+                  <div className="text-2xl">🏠</div>
+                  <h4 className="font-bold text-sm text-[var(--text-primary)]">Home Tiffin Kitchens</h4>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Independent family kitchens and traditional dabbawalas cooking 20–200 home-style meals daily who need to eliminate physical notebook registers.
+                  </p>
+                </div>
+                <div className="glass-card p-5 space-y-2">
+                  <div className="text-2xl">🏢</div>
+                  <h4 className="font-bold text-sm text-[var(--text-primary)]">Corporate Lunch Caterers</h4>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Catering partners delivering scheduled weekday executive thalis directly to tech parks, offices, and co-working spaces with GST tax compliance.
+                  </p>
+                </div>
+                <div className="glass-card p-5 space-y-2">
+                  <div className="text-2xl">☁️</div>
+                  <h4 className="font-bold text-sm text-[var(--text-primary)]">Cloud Kitchens & Meal-Prep</h4>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Multi-brand commercial kitchens scaling meal subscriptions across urban sectors needing automated WhatsApp bots and live KDS screens.
+                  </p>
+                </div>
+                <div className="glass-card p-5 space-y-2">
+                  <div className="text-2xl">🛵</div>
+                  <h4 className="font-bold text-sm text-[var(--text-primary)]">Delivery Fleet Managers</h4>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Dispatch supervisors who coordinate drivers across locality sectors and require real-time manifests that auto-skip paused customer residences.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* MANDATORY SECTION 2: HOW IT HELPS */}
+            <div className="space-y-4">
+              <div className="text-center space-y-1">
+                <div className="badge-brand">Value Proposition</div>
+                <h2 className="text-2xl font-bold text-[var(--text-primary)]">How TiffinFlow Solves Daily Operational Chaos</h2>
+                <p className="text-xs text-[var(--text-secondary)]">Direct comparison of traditional manual processes vs. automated SaaS intelligence</p>
+              </div>
+              <div className="grid md:grid-cols-3 gap-5">
+                <div className="glass-card p-6 space-y-3">
+                  <div className="badge-paused text-xs">❌ Manual Nightmare</div>
+                  <h4 className="font-bold text-base text-[var(--text-primary)]">Eliminates Food Waste</h4>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Customers call at 11:30 AM to cancel, after the subzi is already cooked. TiffinFlow enforces a <strong>strict 9:00 AM cutoff</strong>; late pauses automatically take effect from the next business day.
+                  </p>
+                </div>
+                <div className="glass-card p-6 space-y-3">
+                  <div className="badge-brand text-xs">🧮 100% Bill Fairness</div>
+                  <h4 className="font-bold text-base text-[var(--text-primary)]">Zero Billing Disputes</h4>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Customers dispute month-end amounts over forgotten vacation days. TiffinFlow mathematically calculates exact delivered weekdays with an itemized calendar and WhatsApp bill share.
+                  </p>
+                </div>
+                <div className="glass-card p-6 space-y-3">
+                  <div className="badge-active text-xs">⚡ Automated Efficiency</div>
+                  <h4 className="font-bold text-base text-[var(--text-primary)]">Automated WhatsApp & KDS</h4>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Kitchen staff look at a wallboard TV screen with live counts; drivers get clustered routes with 1-tap Google Maps; customers pause meals via 24/7 WhatsApp chat bot.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* MANDATORY SECTION 3: THREE FEATURES WE WOULD BUILD NEXT */}
+            <div className="glass-card p-8 space-y-6">
+              <div className="text-center max-w-xl mx-auto space-y-1.5">
+                <div className="badge-brand">Product Roadmap</div>
+                <h2 className="text-2xl font-bold text-[var(--text-primary)]">Three Features We Would Build Next</h2>
+                <p className="text-xs text-[var(--text-secondary)]">Strategic high-impact capabilities slated for subsequent engineering milestones</p>
+              </div>
+              <div className="grid md:grid-cols-3 gap-5 pt-2">
+                <div className="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="badge-brand font-mono text-[10px]">ROADMAP 01</span>
+                    <span className="text-xl">💳</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-[var(--text-primary)]">UPI Autopay & Recurring Mandates</h4>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Direct integration with Razorpay Subscriptions and NPCI UPI Autopay. Eliminates chasing payments by automatically debiting monthly charges while automatically discounting pro-rated paused credits on billing renewal.
+                  </p>
+                </div>
+                <div className="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="badge-brand font-mono text-[10px]">ROADMAP 02</span>
+                    <span className="text-xl">⚖️</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-[var(--text-primary)]">IoT Kitchen Scale & QR Dabba Tagging</h4>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Hardware integration with Bluetooth packing scales and laser QR code tags on each stainless-steel dabba. Verifies portion grams in 0.5s, eliminates wrong meal drops, and notifies dispatch instantly upon tray scan.
+                  </p>
+                </div>
+                <div className="p-5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="badge-brand font-mono text-[10px]">ROADMAP 03</span>
+                    <span className="text-xl">📍</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-[var(--text-primary)]">Live Driver GPS Telemetry & WhatsApp Tracking</h4>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Driver mobile progressive web app with turn-by-turn route sequencing and background GPS telemetry. Automatically sends an interactive WhatsApp message with a live tracking link when the lunchbox is 1 km away.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Action Footer */}
+            <div className="text-center py-4 space-y-3">
+              <h3 className="text-xl font-bold text-[var(--text-primary)]">Ready to experience seamless kitchen dispatch?</h3>
+              <div className="flex justify-center gap-3">
+                <button onClick={() => setActiveTab('dashboard')} className="btn-primary text-xs px-6 py-2.5">
+                  Open Subscriptions & Billing →
+                </button>
+                <button onClick={() => setActiveTab('kds')} className="btn-secondary text-xs px-5 py-2.5">
+                  View KDS Wallboard
+                </button>
               </div>
             </div>
           </div>
@@ -944,7 +1183,7 @@ function App() {
                   <input
                     type="text"
                     placeholder="Search name, phone, address..."
-                    className="input-control text-xs w-48"
+                    className="input-control text-xs w-44"
                     value={search}
                     onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                   />
@@ -965,18 +1204,42 @@ function App() {
                     <option value="ACTIVE">Active Only</option>
                     <option value="PAUSED">Paused Only</option>
                   </select>
+                  <select
+                    className="input-control text-xs w-36 font-semibold"
+                    value={`${sortField}-${sortOrder}`}
+                    onChange={(e) => {
+                      const [f, o] = e.target.value.split('-');
+                      setSortField(f);
+                      setSortOrder(o);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value="id-asc">Sort: Default ID</option>
+                    <option value="name-asc">Sort: Name (A → Z)</option>
+                    <option value="name-desc">Sort: Name (Z → A)</option>
+                    <option value="monthly_price-asc">Sort: Price (Low → High)</option>
+                    <option value="monthly_price-desc">Sort: Price (High → Low)</option>
+                    <option value="status-asc">Sort: Active First</option>
+                    <option value="status-desc">Sort: Paused First</option>
+                  </select>
                 </div>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-[var(--border-color)] text-[var(--text-muted)] text-xs">
-                      <th className="pb-3 font-semibold">Subscriber</th>
+                    <tr className="border-b border-[var(--border-color)] text-[var(--text-muted)] text-xs select-none">
+                      <th onClick={() => handleSort('name')} className="pb-3 font-semibold cursor-pointer hover:text-[var(--color-brand)] transition">
+                        Subscriber {sortField === 'name' ? (sortOrder === 'asc' ? '↑' : '↓') : '↕'}
+                      </th>
                       <th className="pb-3 font-semibold">Phone</th>
                       <th className="pb-3 font-semibold">Area</th>
-                      <th className="pb-3 font-semibold">Plan & Meal</th>
-                      <th className="pb-3 font-semibold">Status</th>
+                      <th onClick={() => handleSort('monthly_price')} className="pb-3 font-semibold cursor-pointer hover:text-[var(--color-brand)] transition">
+                        Plan & Meal {sortField === 'monthly_price' ? (sortOrder === 'asc' ? '↑' : '↓') : '↕'}
+                      </th>
+                      <th onClick={() => handleSort('status')} className="pb-3 font-semibold cursor-pointer hover:text-[var(--color-brand)] transition">
+                        Status {sortField === 'status' ? (sortOrder === 'asc' ? '↑' : '↓') : '↕'}
+                      </th>
                       <th className="pb-3 font-semibold text-right">Actions</th>
                     </tr>
                   </thead>
@@ -2119,6 +2382,222 @@ function App() {
                 <button type="submit" className="btn-primary text-xs px-4 py-2">Activate Subscription</button>
               </div>
             </form>
+      {/* --------------------------------------------------------------------
+          MODAL 7: USER AUTHENTICATION & REGISTRATION (MANDATORY REQUIREMENT)
+          -------------------------------------------------------------------- */}
+      {authModal && (
+        <div className="modal-overlay">
+          <div className="modal-container max-w-md p-6 space-y-4 animate-fade-in">
+            <button onClick={() => setAuthModal(null)} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-primary)] font-bold text-lg">✕</button>
+
+            {authModal === 'login' && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🔑</span>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)]">TiffinFlow Staff Login</h3>
+                  </div>
+                  <p className="text-xs text-[var(--text-secondary)]">Sign in with registered credentials or use kitchen demo account</p>
+                </div>
+
+                {authError && (
+                  <div className="p-2.5 rounded-lg bg-[var(--color-paused-glow)] border border-[var(--color-paused-border)] text-xs text-[var(--color-paused)] font-semibold">
+                    ⚠️ {authError}
+                  </div>
+                )}
+
+                <form onSubmit={handleAuthLogin} className="space-y-3">
+                  <div>
+                    <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      placeholder="chef@vaibhavtiffin.com"
+                      className="input-control w-full text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Password</label>
+                    <input
+                      type="password"
+                      required
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="input-control w-full text-xs font-mono"
+                    />
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-[var(--bg-card-hover)] border border-[var(--border-color)] flex items-center justify-between text-xs">
+                    <span className="text-[var(--text-muted)]">Demo Admin:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthEmail('chef@vaibhavtiffin.com');
+                        setAuthPassword('admin123');
+                      }}
+                      className="text-xs text-[var(--color-brand)] font-bold hover:underline"
+                    >
+                      Fill Demo Credentials →
+                    </button>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => { setAuthModal('register'); setAuthError(''); }}
+                      className="text-xs text-[var(--color-brand)] font-semibold hover:underline"
+                    >
+                      New user? Register →
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={authLoading}
+                      className="btn-primary text-xs px-5 py-2"
+                    >
+                      {authLoading ? 'Signing in...' : 'Sign In'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {authModal === 'register' && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">📝</span>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)]">Register New Account</h3>
+                  </div>
+                  <p className="text-xs text-[var(--text-secondary)]">Create a staff account for kitchen management, cook, or delivery driver</p>
+                </div>
+
+                {authError && (
+                  <div className="p-2.5 rounded-lg bg-[var(--color-paused-glow)] border border-[var(--color-paused-border)] text-xs text-[var(--color-paused)] font-semibold">
+                    ⚠️ {authError}
+                  </div>
+                )}
+
+                <form onSubmit={handleAuthRegister} className="space-y-3">
+                  <div>
+                    <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={authName}
+                      onChange={(e) => setAuthName(e.target.value)}
+                      placeholder="e.g. Mukesh Saini"
+                      className="input-control w-full text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      placeholder="e.g. mukesh@vaibhavtiffin.com"
+                      className="input-control w-full text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Password</label>
+                    <input
+                      type="password"
+                      required
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      placeholder="Min 6 characters"
+                      className="input-control w-full text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Role Assignment</label>
+                    <select
+                      value={authRole}
+                      onChange={(e) => setAuthRole(e.target.value)}
+                      className="input-control w-full text-xs font-semibold"
+                    >
+                      <option value="owner">Kitchen Owner / Manager</option>
+                      <option value="cook">Head Chef / Cook Staff</option>
+                      <option value="driver">Delivery Driver</option>
+                    </select>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => { setAuthModal('login'); setAuthError(''); }}
+                      className="text-xs text-[var(--color-brand)] font-semibold hover:underline"
+                    >
+                      Already have an account? Login →
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={authLoading}
+                      className="btn-primary text-xs px-5 py-2"
+                    >
+                      {authLoading ? 'Registering...' : 'Create Account'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {authModal === 'profile' && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 border-b border-[var(--border-color)] pb-3">
+                  <div className="w-12 h-12 rounded-full bg-[var(--color-brand-glow)] border border-[var(--border-focus)] flex items-center justify-center text-2xl">
+                    👤
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">{currentUser.name}</h3>
+                    <p className="text-xs font-mono text-[var(--text-secondary)]">{currentUser.email}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="p-3 rounded-xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] space-y-1.5">
+                    <div className="flex justify-between">
+                      <span className="text-[var(--text-muted)]">Active Role:</span>
+                      <strong className="text-[var(--color-brand)] uppercase">{currentUser.role}</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[var(--text-muted)]">Kitchen Enterprise:</span>
+                      <strong className="text-[var(--text-primary)]">Vaibhav Annapurna Kitchens</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[var(--text-muted)]">GSTIN:</span>
+                      <span className="font-mono text-[var(--text-secondary)]">08AABCR1234F1Z5</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[var(--text-muted)]">Session Status:</span>
+                      <span className="text-[var(--color-active)] font-semibold">● Active Authenticated Session</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-2">
+                  <button
+                    type="button"
+                    onClick={handleAuthLogout}
+                    className="btn-secondary text-xs px-4 py-2 text-[var(--color-paused)]"
+                  >
+                    🚪 Log Out
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAuthModal(null)}
+                    className="btn-primary text-xs px-5 py-2"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

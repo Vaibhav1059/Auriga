@@ -151,6 +151,15 @@
       padding: 20px;
     }
 
+    /* Clean Sub-nav horizontal scrolling without visible scrollbar track */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
     /* KDS TV High Contrast Styles */
     .kds-tv {
       background: #020617;
@@ -476,105 +485,88 @@
 
       return (
         <div className="min-h-screen flex flex-col">
-          {/* TOP NAVBAR */}
-          <header className="sticky top-0 z-50 bg-[var(--bg-surface)] border-b border-[var(--border-color)] shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-              {/* Logo */}
-              <div onClick={() => setActiveTab('landing')} className="flex items-center gap-3 cursor-pointer">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/25">
+          {/* REFACTORED TWO-TIER PRODUCTION HEADER: Clean separation between Brand/Actions (Tier 1) and Tab Navigation (Tier 2) */}
+          <header className="sticky top-0 z-50 bg-[var(--bg-surface)] border-b border-[var(--border-color)] shadow-sm backdrop-blur-md">
+            {/* TIER 1: BRAND IDENTITY & GLOBAL UTILITY ACTIONS */}
+            {/* Set fixed h-16 (64px) with justify-between and shrink-0 to prevent logo/action collisions */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+              {/* Left: Brand Identity Block */}
+              <div onClick={() => setActiveTab('landing')} className="flex items-center gap-3 cursor-pointer select-none shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-md shadow-amber-500/20">
                   🍱
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Tiffin<span className="text-[var(--color-amber)]">Flow</span></span>
+                    <span className="text-xl font-black text-[var(--text-primary)] tracking-tight">Tiffin<span className="text-[var(--color-amber)]">Flow</span></span>
                     <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full badge-active">
                       SaaS 2.0
                     </span>
                   </div>
-                  <p className="text-xs text-[var(--text-secondary)]">Rajeshwar Annapurna Kitchens • GSTIN: 08AABCR1234F1Z5</p>
+                  <p className="text-[11px] text-[var(--text-secondary)] hidden sm:block">Rajeshwar Annapurna Kitchens • GSTIN: 08AABCR1234F1Z5</p>
                 </div>
               </div>
 
-              {/* Navigation Tabs */}
-              <nav className="hidden lg:flex items-center gap-1.5">
-                <button
-                  onClick={() => setActiveTab('landing')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'landing' ? 'btn-primary' : 'btn-secondary'}`}
-                >
-                  ✨ 1. Overview
-                </button>
-                <button
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'dashboard' ? 'btn-primary' : 'btn-secondary'}`}
-                >
-                  👥 2. Subscriptions & Bills
-                </button>
-                <button
-                  onClick={() => setActiveTab('dispatch')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'dispatch' ? 'btn-primary' : 'btn-secondary'}`}
-                >
-                  👨‍🍳 3. Dispatch
-                </button>
-                <button
-                  onClick={() => setActiveTab('kds')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'kds' ? 'btn-primary' : 'btn-secondary'}`}
-                >
-                  📺 4. KDS TV Mode
-                </button>
-                <button
-                  onClick={() => setActiveTab('driver')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'driver' ? 'btn-primary' : 'btn-secondary'}`}
-                >
-                  🛵 5. Driver Routes
-                </button>
-                <button
-                  onClick={() => setActiveTab('whatsapp')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'whatsapp' ? 'btn-primary' : 'btn-secondary'}`}
-                >
-                  💬 6. WhatsApp Bot
-                </button>
-                <button
-                  onClick={() => setActiveTab('audit')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'audit' ? 'btn-primary' : 'btn-secondary'}`}
-                >
-                  🛡️ 7. Audit Logs
-                </button>
-              </nav>
-
-              {/* Theme Toggle & API Status */}
-              <div className="flex items-center gap-3">
+              {/* Right: Global Actions (Live API status, Light/Dark toggle, Primary CTA) */}
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                {/* Live backend health badge */}
                 <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-semibold text-emerald-600">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  API Port: 5000
+                  <span className="font-mono">Port 5000</span>
                 </div>
 
+                {/* Theme Toggle Button: Uniform h-9 height for perfect vertical alignment */}
                 <button
                   onClick={toggleTheme}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-card-hover)] text-[var(--text-primary)] hover:border-[var(--color-amber)] transition"
+                  className="h-9 px-3 rounded-lg text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-card-hover)] text-[var(--text-primary)] hover:border-[var(--color-amber)] transition flex items-center gap-1.5"
+                  title="Toggle Light / Dark Mode"
                 >
-                  {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+                  <span>{theme === 'light' ? '🌙' : '☀️'}</span>
+                  <span className="hidden md:inline">{theme === 'light' ? 'Dark' : 'Light'}</span>
                 </button>
 
+                {/* Primary CTA: Add Subscriber */}
                 <button
                   onClick={() => setNewSubModal(true)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-amber)] text-[var(--color-amber)] hover:bg-[var(--color-amber-glow)] transition"
+                  className="btn-primary h-9 text-xs px-3.5 flex items-center gap-1.5 shadow-sm"
                 >
-                  + Add Sub
+                  <span className="font-bold">+</span>
+                  <span className="font-bold whitespace-nowrap">Add Subscriber</span>
                 </button>
               </div>
             </div>
 
-            {/* Mobile Nav Bar */}
-            <div className="lg:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-t border-[var(--border-color)]">
-              {['landing', 'dashboard', 'dispatch', 'kds', 'driver', 'whatsapp', 'audit'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-2.5 py-1 rounded text-xs font-medium whitespace-nowrap ${activeTab === tab ? 'bg-amber-500 text-slate-950 font-bold' : 'text-[var(--text-secondary)]'}`}
-                >
-                  {tab.toUpperCase()}
-                </button>
-              ))}
+            {/* TIER 2: SLEEK SUB-NAVIGATION BAR */}
+            {/* Unified pill tabs with whitespace-nowrap and overflow-x-auto to eliminate ugly text wrapping and prevent viewport overflow on any screen */}
+            <div className="border-t border-[var(--border-color)] bg-[var(--bg-card)]">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <nav className="flex items-center gap-1.5 overflow-x-auto py-2 no-scrollbar -mx-1 px-1">
+                  {[
+                    { id: 'landing', label: 'Overview', icon: '✨' },
+                    { id: 'dashboard', label: 'Subscriptions & Billing', icon: '👥' },
+                    { id: 'dispatch', label: 'Kitchen Dispatch', icon: '👨‍🍳' },
+                    { id: 'kds', label: 'KDS TV Wallboard', icon: '📺' },
+                    { id: 'driver', label: 'Driver Routes', icon: '🛵' },
+                    { id: 'whatsapp', label: 'WhatsApp Bot', icon: '💬' },
+                    { id: 'audit', label: 'Audit Trail', icon: '🛡️' }
+                  ].map(tab => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`h-8 px-3.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                          isActive 
+                            ? 'bg-amber-500/15 text-[var(--color-amber)] border border-amber-500/40 shadow-sm font-bold' 
+                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] border border-transparent'
+                        }`}
+                      >
+                        <span className="text-sm">{tab.icon}</span>
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
             </div>
           </header>
 

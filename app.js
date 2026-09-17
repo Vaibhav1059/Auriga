@@ -2382,6 +2382,10 @@ function App() {
                 <button type="submit" className="btn-primary text-xs px-4 py-2">Activate Subscription</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
       {/* --------------------------------------------------------------------
           MODAL 7: USER AUTHENTICATION & REGISTRATION (MANDATORY REQUIREMENT)
           -------------------------------------------------------------------- */}

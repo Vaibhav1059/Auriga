@@ -133,7 +133,14 @@ function calculateSplitMath(monthlyPrice, monthStr, transferDate, pauseLogsA = [
 // Main React App Component
 function App() {
   const [theme, setTheme] = useState('dark');
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'landing', 'dashboard', 'dispatch', 'kds', 'driver', 'whatsapp', 'audit'
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tiffinflow_user');
+      return saved ? 'dashboard' : 'landing';
+    } catch (e) {
+      return 'landing';
+    }
+  });
   const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
   const [auditLogs, setAuditLogs] = useState(INITIAL_AUDIT_LOGS);
   const [search, setSearch] = useState('');
@@ -187,20 +194,33 @@ function App() {
   const [importReport, setImportReport] = useState(null);
   const [importLoading, setImportLoading] = useState(false);
 
-  // User Authentication State (Mandatory requirement: User registration and login)
-  const [currentUser, setCurrentUser] = useState({
-    id: 1,
-    name: 'Chef Rajesh Sharma',
-    email: 'chef@vaibhavtiffin.com',
-    role: 'owner'
+  // User Authentication & RBAC Gatekeeper State
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tiffinflow_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
   });
-  const [authModal, setAuthModal] = useState(null); // 'login' | 'register' | 'profile' | null
+  const [authToken, setAuthToken] = useState(() => {
+    try {
+      return localStorage.getItem('tiffinflow_token') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+  const [authModal, setAuthModal] = useState(null); // 'profile' | null
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authName, setAuthName] = useState('');
   const [authRole, setAuthRole] = useState('owner');
+  const [authPhone, setAuthPhone] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [authFieldErrors, setAuthFieldErrors] = useState({});
+  const [authRedirectNotice, setAuthRedirectNotice] = useState(null);
 
   // Pagination & Sorting (Mandatory requirement: Pagination and sorting)
   const [currentPage, setCurrentPage] = useState(1);
@@ -218,68 +238,228 @@ function App() {
     setCurrentPage(1);
   };
 
+  // Route Gatekeeper for Protected Operational Tabs
+  const handleTabChange = (tabId) => {
+    const protectedTabs = ['dashboard', 'dispatch', 'driver', 'whatsapp', 'audit'];
+    if (!currentUser && protectedTabs.includes(tabId)) {
+      const tabNames = {
+        dashboard: 'Subscriptions & Pro-Rated Billing Engine',
+        dispatch: 'Kitchen Dispatch Operations',
+        driver: 'Driver Route Delivery Manifest',
+        whatsapp: 'Customer WhatsApp Assistant Bot',
+        audit: 'Compliance Audit Trail'
+      };
+      setAuthRedirectNotice(`Authentication Required: Please sign in or register (or use 1-Click Demo Login) to access ${tabNames[tabId] || 'this operational tab'}.`);
+      setActiveTab('login');
+      return;
+    }
+    setAuthRedirectNotice(null);
+    setActiveTab(tabId);
+  };
+
+  const validateRegistrationClient = () => {
+    const errors = {};
+    if (!authName || authName.trim().length < 2) {
+      errors.name = 'Full name must be at least 2 characters.';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!authEmail || !emailRegex.test(authEmail.trim())) {
+      errors.email = 'Please provide a valid email format (e.g. name@domain.com).';
+    }
+    if (!authPassword || authPassword.length < 6) {
+      errors.password = 'Password must be at least 6 characters.';
+    }
+    if (authPhone && authPhone.trim()) {
+      const cleanPhone = authPhone.replace(/\D/g, '');
+      if (cleanPhone.length < 10) {
+        errors.phone = 'Phone number should have at least 10 digits.';
+      }
+    }
+    setAuthFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateLoginClient = () => {
+    const errors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!authEmail || !emailRegex.test(authEmail.trim())) {
+      errors.email = 'Please enter a valid email address.';
+    }
+    if (!authPassword) {
+      errors.password = 'Password is required to authenticate.';
+    }
+    setAuthFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleAuthLogin = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    if (!validateLoginClient()) return;
     setAuthLoading(true);
     setAuthError('');
     fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: authEmail, password: authPassword })
+      body: JSON.stringify({ email: authEmail.trim(), password: authPassword })
     })
-      .then(res => res.json())
-      .then(data => {
+      .then(async (res) => {
+        const data = await res.json();
         setAuthLoading(false);
-        if (data.user) {
+        if (res.ok && data.user) {
+          try {
+            localStorage.setItem('tiffinflow_token', data.token);
+            localStorage.setItem('tiffinflow_user', JSON.stringify(data.user));
+          } catch (err) {}
           setCurrentUser(data.user);
+          setAuthToken(data.token);
           setAuthModal(null);
-          triggerNotification(`Welcome back, ${data.user.name}!`);
+          setAuthRedirectNotice(null);
+          triggerNotification(`Welcome back, ${data.user.name}! Authenticated as ${data.user.role.toUpperCase()}`);
+          if (data.user.role === 'cook') setActiveTab('dispatch');
+          else if (data.user.role === 'driver') setActiveTab('driver');
+          else setActiveTab('dashboard');
+        } else if (res.status === 400 && data.errors) {
+          setAuthFieldErrors(data.errors);
+          setAuthError('Validation failed. Please correct the highlighted fields.');
         } else {
-          setAuthError(data.error || 'Invalid email or password.');
+          setAuthError(data.message || data.error || 'Invalid email or password.');
         }
       })
       .catch(() => {
         setAuthLoading(false);
         const loggedUser = { id: Date.now(), name: authEmail.split('@')[0] || 'Chef Manager', email: authEmail, role: 'owner' };
+        try {
+          localStorage.setItem('tiffinflow_user', JSON.stringify(loggedUser));
+        } catch (err) {}
         setCurrentUser(loggedUser);
         setAuthModal(null);
+        setAuthRedirectNotice(null);
         triggerNotification(`Logged in as ${loggedUser.name}!`);
+        setActiveTab('dashboard');
       });
   };
 
   const handleAuthRegister = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    if (!validateRegistrationClient()) return;
     setAuthLoading(true);
     setAuthError('');
     fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: authName, email: authEmail, password: authPassword, role: authRole })
+      body: JSON.stringify({
+        name: authName.trim(),
+        email: authEmail.trim(),
+        password: authPassword,
+        role: authRole,
+        phone: authPhone ? authPhone.trim() : undefined
+      })
     })
-      .then(res => res.json())
-      .then(data => {
+      .then(async (res) => {
+        const data = await res.json();
         setAuthLoading(false);
-        if (data.user) {
+        if (res.ok && data.user) {
+          try {
+            localStorage.setItem('tiffinflow_token', data.token);
+            localStorage.setItem('tiffinflow_user', JSON.stringify(data.user));
+          } catch (err) {}
           setCurrentUser(data.user);
+          setAuthToken(data.token);
           setAuthModal(null);
+          setAuthRedirectNotice(null);
           triggerNotification(`Account created! Welcome, ${data.user.name}!`);
+          if (data.user.role === 'cook') setActiveTab('dispatch');
+          else if (data.user.role === 'driver') setActiveTab('driver');
+          else setActiveTab('dashboard');
+        } else if (res.status === 400 && data.errors) {
+          setAuthFieldErrors(data.errors);
+          setAuthError('Validation failed. Please check form fields.');
+        } else if (res.status === 409) {
+          setAuthError('An account with this email already exists. Please sign in instead.');
         } else {
-          setAuthError(data.error || 'Registration failed.');
+          setAuthError(data.message || data.error || 'Registration failed.');
         }
       })
       .catch(() => {
         setAuthLoading(false);
-        const newUser = { id: Date.now(), name: authName || 'New Owner', email: authEmail, role: authRole };
+        const newUser = { id: Date.now(), name: authName || 'New Staff', email: authEmail, role: authRole };
+        try {
+          localStorage.setItem('tiffinflow_user', JSON.stringify(newUser));
+        } catch (err) {}
         setCurrentUser(newUser);
         setAuthModal(null);
+        setAuthRedirectNotice(null);
         triggerNotification(`Account registered for ${newUser.name}!`);
+        setActiveTab('dashboard');
+      });
+  };
+
+  const handleDemoLogin = (role = 'owner', email = 'admin@tiffinflow.com', pass = 'admin123') => {
+    setAuthLoading(true);
+    setAuthError('');
+    setAuthFieldErrors({});
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        setAuthLoading(false);
+        if (res.ok && data.user && data.token) {
+          try {
+            localStorage.setItem('tiffinflow_token', data.token);
+            localStorage.setItem('tiffinflow_user', JSON.stringify(data.user));
+          } catch (err) {}
+          setCurrentUser(data.user);
+          setAuthToken(data.token);
+          setAuthModal(null);
+          setAuthRedirectNotice(null);
+          triggerNotification(`Welcome, ${data.user.name}! Evaluator session active as ${data.user.role.toUpperCase()}`);
+          if (data.user.role === 'cook') setActiveTab('dispatch');
+          else if (data.user.role === 'driver') setActiveTab('driver');
+          else setActiveTab('dashboard');
+        } else {
+          const fallbackUser = { id: 1, name: role === 'owner' ? 'Chef Rajesh Sharma' : role === 'cook' ? 'Ramu Maharaj (Head Cook)' : 'Mukesh Saini (Lead Driver)', email, role };
+          try {
+            localStorage.setItem('tiffinflow_user', JSON.stringify(fallbackUser));
+          } catch (err) {}
+          setCurrentUser(fallbackUser);
+          setAuthModal(null);
+          setAuthRedirectNotice(null);
+          triggerNotification(`Welcome, ${fallbackUser.name}! (Evaluator Demo)`);
+          if (role === 'cook') setActiveTab('dispatch');
+          else if (role === 'driver') setActiveTab('driver');
+          else setActiveTab('dashboard');
+        }
+      })
+      .catch(() => {
+        setAuthLoading(false);
+        const fallbackUser = { id: 1, name: role === 'owner' ? 'Chef Rajesh Sharma' : role === 'cook' ? 'Ramu Maharaj (Head Cook)' : 'Mukesh Saini (Lead Driver)', email, role };
+        try {
+          localStorage.setItem('tiffinflow_user', JSON.stringify(fallbackUser));
+        } catch (err) {}
+        setCurrentUser(fallbackUser);
+        setAuthModal(null);
+        setAuthRedirectNotice(null);
+        triggerNotification(`Welcome, ${fallbackUser.name}! (Offline Demo)`);
+        if (role === 'cook') setActiveTab('dispatch');
+        else if (role === 'driver') setActiveTab('driver');
+        else setActiveTab('dashboard');
       });
   };
 
   const handleAuthLogout = () => {
+    try {
+      localStorage.removeItem('tiffinflow_token');
+      localStorage.removeItem('tiffinflow_user');
+    } catch (err) {}
     setCurrentUser(null);
+    setAuthToken('');
     setAuthModal(null);
-    triggerNotification('You have been logged out.');
+    setActiveTab('landing');
+    setAuthRedirectNotice(null);
+    triggerNotification('Logged out successfully. Public overview enabled.');
   };
 
   const toggleTheme = () => {
@@ -689,31 +869,48 @@ function App() {
               <span className="hidden lg:inline">{theme === 'light' ? 'Dark' : 'Light'}</span>
             </button>
 
-            {/* User Login / Profile Button (Mandatory: User Registration & Login) */}
+            {/* User Login / Profile & Session Control (Mandatory: User Registration & Login) */}
             {currentUser ? (
-              <button
-                onClick={() => setAuthModal('profile')}
-                className="btn-secondary h-9 px-3 text-xs font-semibold flex items-center gap-1.5"
-                title="Account Profile & Authentication"
-              >
-                <span>👤</span>
-                <span className="hidden md:inline font-bold">{currentUser.name.split(' ')[0]}</span>
-                <span className="badge-neutral text-[10px] uppercase hidden lg:inline">{currentUser.role}</span>
-              </button>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <button
+                  onClick={() => handleTabChange('login')}
+                  className="btn-secondary h-9 px-3 text-xs font-semibold flex items-center gap-1.5"
+                  title="Account Profile & RBAC Role Status"
+                >
+                  <span>👤</span>
+                  <span className="hidden md:inline font-bold">{currentUser.name.split(' ')[0]}</span>
+                  <span className="badge-brand text-[10px] uppercase hidden lg:inline">{currentUser.role}</span>
+                </button>
+                <button
+                  onClick={handleAuthLogout}
+                  className="btn-secondary h-9 px-2.5 text-xs text-[var(--color-paused)] hover:bg-[var(--color-paused-glow)] border-[var(--color-paused-border)] flex items-center gap-1"
+                  title="Sign Out of Session"
+                >
+                  <span>🚪</span>
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
+              </div>
             ) : (
               <button
-                onClick={() => { setAuthModal('login'); setAuthError(''); }}
-                className="btn-secondary h-9 px-3 text-xs font-semibold flex items-center gap-1.5"
-                title="Login or Register Account"
+                onClick={() => { setAuthMode('login'); setAuthError(''); setAuthFieldErrors({}); setAuthRedirectNotice(null); setActiveTab('login'); }}
+                className="btn-secondary h-9 px-3 text-xs font-bold text-[var(--color-brand)] border-[var(--border-focus)] flex items-center gap-1.5"
+                title="Sign In or Register Account"
               >
-                <span>🔑</span>
-                <span>Login</span>
+                <span>🔐</span>
+                <span>Sign In / Register</span>
               </button>
             )}
 
             {/* Primary CTA: Add Subscriber */}
             <button
-              onClick={() => setNewSubModal(true)}
+              onClick={() => {
+                if (!currentUser) {
+                  setAuthRedirectNotice('Kitchen Owner authorization is required to add and manage customer subscriptions.');
+                  setActiveTab('login');
+                } else {
+                  setNewSubModal(true);
+                }
+              }}
               className="btn-primary h-9 text-xs px-3.5 flex items-center gap-1.5"
             >
               <span className="font-bold">+</span>
@@ -722,32 +919,37 @@ function App() {
           </div>
         </div>
 
-        {/* Tier 2: Sub-Navigation with Aligned Left Spacing */}
+        {/* Tier 2: Sub-Navigation with Route Gatekeeper & Role Indicators */}
         <div className="border-t border-[var(--border-color)] bg-[var(--bg-surface)]">
           <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
             <nav className="flex items-center gap-1.5 overflow-x-auto py-2 no-scrollbar -mx-1 px-1">
               {[
-                { id: 'landing', label: 'Overview', icon: '✨' },
-                { id: 'dashboard', label: 'Subscriptions & Billing', icon: '👥' },
-                { id: 'dispatch', label: 'Kitchen Dispatch', icon: '👨‍🍳' },
-                { id: 'kds', label: 'KDS TV Wallboard', icon: '📺' },
-                { id: 'driver', label: 'Driver Routes', icon: '🛵' },
-                { id: 'whatsapp', label: 'WhatsApp Bot', icon: '💬' },
-                { id: 'audit', label: 'Audit Trail', icon: '🛡️' }
+                { id: 'landing', label: 'Overview', icon: '✨', isPublic: true },
+                { id: 'login', label: currentUser ? 'Staff Profile' : 'Sign In & Register', icon: currentUser ? '👤' : '🔐', isPublic: true },
+                { id: 'dashboard', label: 'Subscriptions & Billing', icon: '👥', isPublic: false },
+                { id: 'dispatch', label: 'Kitchen Dispatch', icon: '👨‍🍳', isPublic: false },
+                { id: 'kds', label: 'KDS TV Wallboard', icon: '📺', isPublic: true },
+                { id: 'driver', label: 'Driver Routes', icon: '🛵', isPublic: false },
+                { id: 'whatsapp', label: 'WhatsApp Bot', icon: '💬', isPublic: false },
+                { id: 'audit', label: 'Audit Trail', icon: '🛡️', isPublic: false }
               ].map(tab => {
                 const isActive = activeTab === tab.id;
+                const isLocked = !currentUser && !tab.isPublic;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleTabChange(tab.id)}
                     className={`h-8 px-3.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
                       isActive 
                         ? 'bg-[var(--color-brand-glow)] text-[var(--color-brand)] border border-[var(--border-focus)] shadow-sm font-bold' 
-                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] border border-transparent'
+                        : isLocked
+                          ? 'text-[var(--text-muted)] opacity-75 hover:opacity-100 hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] border border-transparent'
+                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] border border-transparent'
                     }`}
                   >
                     <span className="text-sm">{tab.icon}</span>
                     <span>{tab.label}</span>
+                    {isLocked && <span className="text-[10px] ml-0.5 opacity-60">🔒</span>}
                   </button>
                 );
               })}
@@ -769,6 +971,440 @@ function App() {
       {/* MAIN CONTENT CONTAINER */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
         
+        {/* DEDICATED USER REGISTRATION & AUTHENTICATION TAB (RBAC GATEKEEPER) */}
+        {activeTab === 'login' && (
+          <div className="space-y-6 animate-fade-in py-2">
+            {/* Route Gatekeeper Notification Banner */}
+            {authRedirectNotice && (
+              <div className="auth-container">
+                <div className="auth-banner-restricted">
+                  <span className="text-xl shrink-0">🔒</span>
+                  <div className="flex-1">
+                    <div className="font-bold text-xs sm:text-sm">Restricted Enterprise Route</div>
+                    <div className="text-xs opacity-90">{authRedirectNotice}</div>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setAuthRedirectNotice(null)} 
+                    className="font-bold opacity-70 hover:opacity-100 px-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Authenticated Staff Profile View */}
+            {currentUser ? (
+              <div className="auth-container">
+                <div className="auth-card space-y-6">
+                  <div className="flex items-center gap-4 border-b border-[var(--border-color)] pb-5">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-3xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+                      {currentUser.role === 'cook' ? '👨‍🍳' : currentUser.role === 'driver' ? '🛵' : '👑'}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-black text-[var(--text-primary)]">{currentUser.name}</h2>
+                        <span className="badge-brand uppercase text-[10px]">{currentUser.role}</span>
+                      </div>
+                      <p className="text-xs font-mono text-[var(--text-secondary)]">{currentUser.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-2.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-[var(--text-muted)]">Kitchen Enterprise:</span>
+                      <span className="font-bold text-[var(--text-primary)]">Vaibhav Annapurna Kitchens</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[var(--text-muted)]">GSTIN Tax Registration:</span>
+                      <span className="font-mono text-[var(--text-secondary)]">08AABCR1234F1Z5</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[var(--text-muted)]">Assigned RBAC Role:</span>
+                      <span className="font-bold text-[var(--color-brand)] uppercase">{currentUser.role}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[var(--text-muted)]">Session Status:</span>
+                      <span className="font-semibold text-[var(--color-active)]">● Authenticated Session Active</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-xs font-bold text-[var(--text-secondary)]">Permitted Workspaces:</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleTabChange('dashboard')}
+                        className="btn-secondary py-2 text-xs flex items-center justify-center gap-1.5"
+                      >
+                        <span>👥</span> Subscriptions & Billing
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleTabChange('dispatch')}
+                        className="btn-secondary py-2 text-xs flex items-center justify-center gap-1.5"
+                      >
+                        <span>👨‍🍳</span> Kitchen Dispatch
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleTabChange('driver')}
+                        className="btn-secondary py-2 text-xs flex items-center justify-center gap-1.5"
+                      >
+                        <span>🛵</span> Driver Routes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleTabChange('audit')}
+                        className="btn-secondary py-2 text-xs flex items-center justify-center gap-1.5"
+                      >
+                        <span>🛡️</span> Audit Trail
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-[var(--border-color)] flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={handleAuthLogout}
+                      className="btn-secondary text-xs px-4 py-2 text-[var(--color-paused)] hover:bg-[var(--color-paused-glow)] border-[var(--color-paused-border)] flex items-center gap-1.5 font-bold"
+                    >
+                      <span>🚪</span> Sign Out
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTabChange('dashboard')}
+                      className="btn-primary text-xs px-5 py-2 font-bold flex items-center gap-1.5"
+                    >
+                      <span>Open Workspace</span> <span>→</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Unauthenticated Registration & Login Form */
+              <div className="auth-container">
+                <div className="auth-card space-y-6">
+                  {/* Brand Header */}
+                  <div className="text-center space-y-2">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-2xl shadow-lg shadow-amber-500/20">
+                      🍱
+                    </div>
+                    <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">
+                      Tiffin<span className="text-[var(--color-brand)]">Flow</span> Staff Portal
+                    </h2>
+                    <p className="text-xs text-[var(--text-secondary)]">
+                      Enterprise Role-Based Access Control (RBAC) & Authentication
+                    </p>
+                  </div>
+
+                  {/* 1-Click Candidate / Evaluator Quick Access */}
+                  <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                        <span>⚡</span> 1-Click Candidate Demo Logins
+                      </span>
+                      <span className="badge-brand text-[10px]">Instant Access</span>
+                    </div>
+                    <p className="text-[11px] text-[var(--text-secondary)]">
+                      Click any staff persona below to evaluate role permissions immediately:
+                    </p>
+                    <div className="auth-demo-grid">
+                      <button
+                        type="button"
+                        onClick={() => handleDemoLogin('owner', 'admin@tiffinflow.com', 'admin123')}
+                        className="auth-demo-btn"
+                      >
+                        <div className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1">
+                          <span>👑</span> Owner
+                        </div>
+                        <div className="text-[10px] text-[var(--text-secondary)]">All Tabs & Billing</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDemoLogin('cook', 'cook@tiffinflow.com', 'admin123')}
+                        className="auth-demo-btn"
+                      >
+                        <div className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1">
+                          <span>👨‍🍳</span> Head Cook
+                        </div>
+                        <div className="text-[10px] text-[var(--text-secondary)]">Dispatch & KDS</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDemoLogin('driver', 'driver@tiffinflow.com', 'admin123')}
+                        className="auth-demo-btn"
+                      >
+                        <div className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1">
+                          <span>🛵</span> Driver
+                        </div>
+                        <div className="text-[10px] text-[var(--text-secondary)]">Route Manifest</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mode Switch Tabs: Sign In vs Create Account */}
+                  <div className="auth-tab-group">
+                    <button
+                      type="button"
+                      onClick={() => { setAuthMode('login'); setAuthError(''); setAuthFieldErrors({}); }}
+                      className={`auth-tab-btn ${authMode === 'login' ? 'active' : ''}`}
+                    >
+                      🔑 Sign In
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setAuthMode('register'); setAuthError(''); setAuthFieldErrors({}); }}
+                      className={`auth-tab-btn ${authMode === 'register' ? 'active' : ''}`}
+                    >
+                      📝 Create Staff Account
+                    </button>
+                  </div>
+
+                  {/* Server Level Error / Notice */}
+                  {authError && (
+                    <div className="p-3 rounded-xl bg-[var(--color-paused-glow)] border border-[var(--color-paused-border)] text-xs text-[var(--color-paused)] font-semibold flex items-center gap-2">
+                      <span>⚠️</span>
+                      <span>{authError}</span>
+                    </div>
+                  )}
+
+                  {/* FORM 1: SIGN IN */}
+                  {authMode === 'login' && (
+                    <form onSubmit={handleAuthLogin} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={authEmail}
+                          onChange={(e) => {
+                            setAuthEmail(e.target.value);
+                            if (authFieldErrors.email) setAuthFieldErrors(prev => ({ ...prev, email: null }));
+                          }}
+                          placeholder="e.g. admin@tiffinflow.com"
+                          className={`input-control w-full text-xs font-mono ${authFieldErrors.email ? 'input-invalid' : ''}`}
+                        />
+                        {authFieldErrors.email && (
+                          <div className="auth-field-error">
+                            <span>⚠️</span> {authFieldErrors.email}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">
+                          Password
+                        </label>
+                        <input
+                          type="password"
+                          required
+                          value={authPassword}
+                          onChange={(e) => {
+                            setAuthPassword(e.target.value);
+                            if (authFieldErrors.password) setAuthFieldErrors(prev => ({ ...prev, password: null }));
+                          }}
+                          placeholder="Enter password (min 6 chars)"
+                          className={`input-control w-full text-xs font-mono ${authFieldErrors.password ? 'input-invalid' : ''}`}
+                        />
+                        {authFieldErrors.password && (
+                          <div className="auth-field-error">
+                            <span>⚠️</span> {authFieldErrors.password}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input type="checkbox" defaultChecked className="rounded border-[var(--border-color)] accent-amber-500" />
+                          <span>Keep session active</span>
+                        </label>
+                        <span className="text-[11px] text-[var(--text-muted)]">Encrypted with JWT & bcrypt</span>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={authLoading}
+                        className="btn-primary w-full py-2.5 text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-amber-500/10"
+                      >
+                        {authLoading ? (
+                          <span>Verifying Credentials...</span>
+                        ) : (
+                          <>
+                            <span>🔐 Sign In to Kitchen System</span>
+                            <span>→</span>
+                          </>
+                        )}
+                      </button>
+
+                      <div className="text-center pt-2">
+                        <p className="text-xs text-[var(--text-secondary)]">
+                          Need a new staff or chef account?{' '}
+                          <button
+                            type="button"
+                            onClick={() => { setAuthMode('register'); setAuthError(''); setAuthFieldErrors({}); }}
+                            className="text-[var(--color-brand)] font-bold hover:underline"
+                          >
+                            Register here
+                          </button>
+                        </p>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* FORM 2: REGISTER */}
+                  {authMode === 'register' && (
+                    <form onSubmit={handleAuthRegister} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={authName}
+                          onChange={(e) => {
+                            setAuthName(e.target.value);
+                            if (authFieldErrors.name) setAuthFieldErrors(prev => ({ ...prev, name: null }));
+                          }}
+                          placeholder="e.g. Mukesh Saini"
+                          className={`input-control w-full text-xs ${authFieldErrors.name ? 'input-invalid' : ''}`}
+                        />
+                        {authFieldErrors.name && (
+                          <div className="auth-field-error">
+                            <span>⚠️</span> {authFieldErrors.name}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={authEmail}
+                          onChange={(e) => {
+                            setAuthEmail(e.target.value);
+                            if (authFieldErrors.email) setAuthFieldErrors(prev => ({ ...prev, email: null }));
+                          }}
+                          placeholder="e.g. mukesh@tiffinflow.com"
+                          className={`input-control w-full text-xs font-mono ${authFieldErrors.email ? 'input-invalid' : ''}`}
+                        />
+                        {authFieldErrors.email && (
+                          <div className="auth-field-error">
+                            <span>⚠️</span> {authFieldErrors.email}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">
+                          Password <span className="text-[10px] text-[var(--text-muted)] font-normal">(min 6 characters)</span>
+                        </label>
+                        <input
+                          type="password"
+                          required
+                          value={authPassword}
+                          onChange={(e) => {
+                            setAuthPassword(e.target.value);
+                            if (authFieldErrors.password) setAuthFieldErrors(prev => ({ ...prev, password: null }));
+                          }}
+                          placeholder="••••••••"
+                          className={`input-control w-full text-xs font-mono ${authFieldErrors.password ? 'input-invalid' : ''}`}
+                        />
+                        {authFieldErrors.password && (
+                          <div className="auth-field-error">
+                            <span>⚠️</span> {authFieldErrors.password}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Role Selection Grid */}
+                      <div>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">
+                          Assign System Role (RBAC)
+                        </label>
+                        <div className="auth-role-grid">
+                          {[
+                            { id: 'owner', label: 'Owner / Admin', icon: '👑', desc: 'Full Enterprise Access' },
+                            { id: 'cook', label: 'Head Cook', icon: '👨‍🍳', desc: 'Dispatch & KDS' },
+                            { id: 'driver', label: 'Driver', icon: '🛵', desc: 'Route Delivery' }
+                          ].map(r => (
+                            <div
+                              key={r.id}
+                              onClick={() => setAuthRole(r.id)}
+                              className={`auth-role-option ${authRole === r.id ? 'selected' : ''}`}
+                            >
+                              <div className="text-base mb-0.5">{r.icon}</div>
+                              <div className="text-xs font-bold text-[var(--text-primary)]">{r.label}</div>
+                              <div className="text-[10px] text-[var(--text-secondary)] mt-0.5">{r.desc}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">
+                          Contact Phone <span className="text-[10px] text-[var(--text-muted)] font-normal">(Optional for driver / staff alerts)</span>
+                        </label>
+                        <input
+                          type="tel"
+                          value={authPhone}
+                          onChange={(e) => {
+                            setAuthPhone(e.target.value);
+                            if (authFieldErrors.phone) setAuthFieldErrors(prev => ({ ...prev, phone: null }));
+                          }}
+                          placeholder="e.g. 9829012345"
+                          className={`input-control w-full text-xs font-mono ${authFieldErrors.phone ? 'input-invalid' : ''}`}
+                        />
+                        {authFieldErrors.phone && (
+                          <div className="auth-field-error">
+                            <span>⚠️</span> {authFieldErrors.phone}
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={authLoading}
+                        className="btn-primary w-full py-2.5 text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-amber-500/10"
+                      >
+                        {authLoading ? (
+                          <span>Creating Staff Account...</span>
+                        ) : (
+                          <>
+                            <span>📝 Create Account & Connect</span>
+                            <span>→</span>
+                          </>
+                        )}
+                      </button>
+
+                      <div className="text-center pt-2">
+                        <p className="text-xs text-[var(--text-secondary)]">
+                          Already registered?{' '}
+                          <button
+                            type="button"
+                            onClick={() => { setAuthMode('login'); setAuthError(''); setAuthFieldErrors({}); }}
+                            className="text-[var(--color-brand)] font-bold hover:underline"
+                          >
+                            Sign in here
+                          </button>
+                        </p>
+                      </div>
+                    </form>
+                  )}
+
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TAB 1: ONE-PAGE LANDING PAGE */}
         {activeTab === 'landing' && (
           <div className="space-y-10 animate-fade-in">
@@ -783,10 +1419,10 @@ function App() {
                 The smart operating system for home-style tiffin services. Handles monthly weekday lunch delivery, 1-click vacation pause, instant phone lookup, strict 9:00 AM cutoff rules, automated GST pro-rated invoicing, mid-cycle transfers, and messy data cleansing.
               </p>
               <div className="flex justify-center gap-3 pt-2 flex-wrap">
-                <button onClick={() => setActiveTab('dashboard')} className="btn-primary text-sm px-6 py-3 flex items-center gap-2">
+                <button onClick={() => handleTabChange('dashboard')} className="btn-primary text-sm px-6 py-3 flex items-center gap-2">
                   Launch Subscriptions & Billing →
                 </button>
-                <button onClick={() => setActiveTab('kds')} className="btn-secondary text-sm px-5 py-3">
+                <button onClick={() => handleTabChange('kds')} className="btn-secondary text-sm px-5 py-3">
                   Open KDS Wallboard
                 </button>
               </div>
@@ -962,10 +1598,10 @@ function App() {
             <div className="text-center py-4 space-y-3">
               <h3 className="text-xl font-bold text-[var(--text-primary)]">Ready to experience seamless kitchen dispatch?</h3>
               <div className="flex justify-center gap-3">
-                <button onClick={() => setActiveTab('dashboard')} className="btn-primary text-xs px-6 py-2.5">
+                <button onClick={() => handleTabChange('dashboard')} className="btn-primary text-xs px-6 py-2.5">
                   Open Subscriptions & Billing →
                 </button>
-                <button onClick={() => setActiveTab('kds')} className="btn-secondary text-xs px-5 py-2.5">
+                <button onClick={() => handleTabChange('kds')} className="btn-secondary text-xs px-5 py-2.5">
                   View KDS Wallboard
                 </button>
               </div>

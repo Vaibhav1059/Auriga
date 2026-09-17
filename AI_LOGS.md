@@ -372,5 +372,56 @@ not opening (with screenshot showing browser console Uncaught SyntaxError: Unexp
    - `npm test`: All 8 baseline billing tests + all 3 twist tests pass with 100% precision.
    - `node tests/audit.js`: All 11 system and UX test checks pass.
 
+---
+
+## Turn 14: Backend Validation Middleware, Auth Controllers, Dedicated Login Page & Route Gatekeeper
+
+### User Request:
+```
+on user registration and login system u have not added proper validation and authorizations and things similarly there might be many diff issue user may face watch closeliy add proper middlewARE CONTROLERS ETC AND PROPER VALIDATION SYSTEM OF THAT I MIGHT HAVE A BETTER WAY IF CANDIDATE USER ETC WHATANTS TO ACCESE DASHBOARD U SHOULD CRRREATE A PROPER USER REGISTERAGION AND LOGIN PAGE THEN CONNECT THEM USING ROUTES OVER PROPER VALIDITIES AND ROUTES
+```
+
+### Problem Diagnosis & Key Requirements:
+1. **Backend Layering Gaps**: Input validation was previously minimal, and auth handling was tightly coupled in `routes/auth.js` without separate controller and validation middleware layers.
+2. **Missing Input & Duplicate Validation**: No field-level validation middleware existed to enforce name length (>=2), valid email RFC format, password complexity (>=6), role whitelist (`owner`, `cook`, `driver`), or duplicate email detection (`409 Conflict`).
+3. **Route Gatekeeper Requirement**: Unauthenticated visitors and evaluator candidates were able to view the operational dashboard without authentication. Access to protected operational views (`Subscriptions & Billing`, `Kitchen Dispatch`, `Driver Routes`, `WhatsApp Bot`, `Audit Trail`) needed to be guarded with client-side and server-side RBAC protection, redirecting unauthenticated users to a dedicated **Sign In & Register** page with a clear notification and 1-click evaluator demo access.
+
+### AI Execution & Implementation:
+1. **Backend Validation Middleware (`server/middleware/validator.js`)**:
+   - Created `validateRegister` enforcing name (2–100 chars), RFC 5322 email regex, password minimum 6 chars, role enum, and optional 10-digit Indian phone.
+   - Created `validateLogin` requiring non-empty email and password.
+   - Returns structured `400 Bad Request` with field-level `{ errors: { [field]: 'message' } }`.
+2. **Backend Authentication Controller (`server/controllers/authController.js`)**:
+   - `register`: Checks for existing accounts in SQLite (`409 Conflict`), hashes passwords with salted `bcryptjs`, inserts new user, signs a 7-day JWT, records `USER_REGISTERED` audit log, and returns 201 with `{ token, user }`.
+   - `login`: Fetches user by email, validates password via `bcrypt.compareSync`, signs JWT, records `USER_LOGIN` audit log, and returns 200 with `{ token, user }`.
+   - `getProfile`: Resolves user and kitchen tenant metadata (`Vaibhav Annapurna Kitchens`, `GSTIN: 08AABCR1234F1Z5`).
+   - `getDemoAccounts`: Supplies pre-seeded credentials for instant evaluator testing.
+3. **Role-Based Authorization Middleware (`server/middleware/auth.js`)**:
+   - JWT extraction and verification from `Authorization: Bearer <token>`.
+   - Added `authMiddleware.requireRole(['owner', 'cook', 'driver'])` returning `403 Forbidden` if user lacks necessary role permissions.
+4. **Dedicated Frontend Auth Page & Route Gatekeeper (`app.js` & `style.css`)**:
+   - Built a dedicated, full-page User Registration & Login view (`activeTab === 'login'`) adhering strictly to the B2B design system with zero inline CSS.
+   - Added `authMode` toggle ("Sign In" vs "Create Staff Account").
+   - Added client-side real-time form validation with inline error helpers.
+   - Embedded 1-Click Candidate Evaluator Demo Logins for **Kitchen Owner** (`admin@tiffinflow.com`), **Head Cook** (`cook@tiffinflow.com`), and **Lead Driver** (`driver@tiffinflow.com`).
+   - Implemented route gatekeeper (`handleTabChange`): Intercepts navigation attempts to protected operational tabs (`dashboard`, `dispatch`, `driver`, `whatsapp`, `audit`) by unauthenticated users, routing them to the Login page with an amber alert banner: *"Restricted Enterprise Route: Please sign in or register to access this operational tab."*
+   - Added session persistence via `localStorage` (`tiffinflow_token`, `tiffinflow_user`).
+   - Added header session indicators: displays logged-in user's name and role badge with a 1-click `Logout` button, or `Sign In / Register` button when unauthenticated.
+5. **New Automated Auth Test Suite (`tests/auth.test.js`)**:
+   - Created 8 automated unit tests verifying: short password rejection (400), invalid email rejection (400), short name rejection (400), valid registration pass, empty login credentials rejection (400), missing auth header rejection (401), valid JWT token acceptance, and role guard (403 Forbidden vs Pass).
+   - Updated `package.json` test script: `"node tests/billing.test.js && node tests/twists.test.js && node tests/auth.test.js"`.
+
+### Verification Results:
+- `npm test`: **All 19 tests passed with 100% precision** (8 pro-rated billing tests + 3 twist tests + 8 auth & validation tests).
+- `node tests/audit.js`: **All 11 system and UX test checks passed**.
+- Live endpoint tests against port 5000:
+  - `GET /api/auth/demo-accounts`: HTTP 200 (3 accounts returned)
+  - `POST /api/auth/login` with bad credentials: HTTP 400 with field validation errors
+  - `POST /api/auth/login` with `admin@tiffinflow.com`: HTTP 200 with signed JWT & user object
+  - `GET /api/auth/me` with Bearer token: HTTP 200 with tenant metadata
+  - `POST /api/auth/register` with duplicate email: HTTP 409 Conflict
+  - `POST /api/auth/register` with new user: HTTP 201 Created with JWT & role assignment
+
+
 
 

@@ -154,12 +154,18 @@ npm test
 
 All operations are exposed via standard RESTful JSON APIs:
 
-### 1. Authentication & Multi-Tenancy
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Register new owner/kitchen enterprise | No |
-| `POST` | `/api/auth/login` | Login with email & password (returns JWT) | No |
-| `GET` | `/api/auth/me` | Fetch current user profile & tenant info | Yes (Bearer) |
+### 1. Authentication, Validation & Role-Based Access Control (RBAC)
+| Method | Endpoint | Description | Auth Required | Validation Rules |
+| :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Register new staff / kitchen account | No | `name >= 2`, valid `email`, `password >= 6`, `role` in `['owner', 'cook', 'driver']` |
+| `POST` | `/api/auth/login` | Sign in with email & password (returns JWT) | No | Non-empty `email` & `password`, checks bcrypt hash & audit log |
+| `GET` | `/api/auth/me` | Fetch authenticated user profile & tenant info | Yes (Bearer JWT) | Validates Bearer token in `Authorization` header |
+| `GET` | `/api/auth/demo-accounts` | List pre-seeded candidate evaluator accounts | No | Returns credentials for 1-Click Evaluator access |
+
+> **Route Gatekeeper & Authorization Architecture:**
+> - **Middleware Chain:** Handled via [`server/middleware/validator.js`](server/middleware/validator.js), [`server/middleware/auth.js`](server/middleware/auth.js), and [`server/controllers/authController.js`](server/controllers/authController.js).
+> - **Client-Side & Server-Side Validation:** All fields are checked with field-level inline error responses. Conflicting email addresses return `409 Conflict`.
+> - **Route Gatekeeper:** Unauthenticated visitors/candidates attempting to access protected enterprise operational tabs (`Subscriptions & Billing`, `Kitchen Dispatch`, `Driver Routes`, `WhatsApp Bot`, `Audit Trail`) are gracefully routed to the dedicated **Sign In & Register** view (`activeTab === 'login'`) with a descriptive route warning banner and instant 1-Click Demo Logins for evaluation (`Owner`, `Head Cook`, `Delivery Driver`).
 
 ### 2. Plans & Subscriptions
 | Method | Endpoint | Description | Auth Required |

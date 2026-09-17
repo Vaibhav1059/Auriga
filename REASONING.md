@@ -162,3 +162,18 @@ All calculations are rounded to 2 decimal places.
 * **Separation of Application Logic:** Client-side React logic is decoupled into [`app.js`](app.js), making `preview.html` a lightweight, maintainable HTML shell that is easy to debug, scale, and test.
 * **Server-Served Static Assets:** `server/index.js` serves `preview.html`, `style.css`, and `app.js` directly on `http://localhost:5000/`, enabling testing with zero CORS obstacles.
 
+---
+
+## 9. Authentication, Validation Middleware, Controllers & Route Gatekeeper
+
+* **Architectural Layering:**
+  - **Middleware Validator (`server/middleware/validator.js`):** Intercepts registration and login requests before reaching business logic. Validates minimum character lengths, RFC 5322 email patterns, password complexity (min 6 characters), and role constraints. Returns structured 400 Bad Request responses with `{ error: 'Validation failed', errors: { [field]: 'message' } }`.
+  - **Controller Layer (`server/controllers/authController.js`):** Decoupled controller containing `register`, `login`, `getProfile`, and `getDemoAccounts`. Handles duplicate email conflict checking (`409 Conflict`), salted password hashing with `bcryptjs`, JWT token signing with 7-day expiration, and immutable audit logging.
+  - **Role-Based Authorization (`server/middleware/auth.js`):** Extends JWT authentication with `requireRole(allowedRoles)` middleware that verifies incoming token claims and guards protected routes with `403 Forbidden` responses.
+* **Route Gatekeeper & Seamless Evaluator Experience:**
+  - **Protected Enterprise Tabs:** Operational tabs (`dashboard`, `dispatch`, `driver`, `whatsapp`, `audit`) are locked for unauthenticated users.
+  - **Graceful Redirection:** If a candidate or guest attempts to access a protected tab, the client-side router redirects them to the dedicated `activeTab === 'login'` page with an explanatory amber alert banner.
+  - **1-Click Demo Evaluation:** To prevent evaluation friction, the Login & Registration view features instantaneous 1-click test buttons for **Kitchen Owner** (`admin@tiffinflow.com`), **Head Cook** (`cook@tiffinflow.com`), and **Lead Driver** (`driver@tiffinflow.com`), automatically routing to their respective operational workspaces.
+  - **Token Persistence:** Authentication state is synchronized with `localStorage` (`tiffinflow_token`, `tiffinflow_user`), maintaining active sessions across page reloads.
+
+

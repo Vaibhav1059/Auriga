@@ -8,7 +8,8 @@ const db = require('../db/database');
  * Accepts commands: "PAUSE", "PAUSE YYYY-MM-DD YYYY-MM-DD", "RESUME", "MENU", "BILL"
  */
 router.post('/whatsapp', (req, res) => {
-  const { phone, message } = req.body;
+  const phone = req.body.phone || req.body.From;
+  const message = req.body.message || req.body.Body;
 
   if (!phone || !message) {
     return res.status(400).json({ error: 'phone and message are required in WhatsApp webhook.' });
@@ -91,6 +92,7 @@ router.post('/whatsapp', (req, res) => {
     }
 
     res.json({
+      success: true,
       status: 'success',
       sender: customer.name,
       reply

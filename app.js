@@ -1467,7 +1467,10 @@ function App() {
                 <input
                   type="date"
                   value={clockDate}
-                  onChange={(e) => setClockDate(e.target.value)}
+                  onChange={(e) => {
+                    setClockDate(e.target.value);
+                    fetchOutbox(e.target.value);
+                  }}
                   className="input-control text-xs font-mono"
                 />
               </div>

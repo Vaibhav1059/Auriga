@@ -210,8 +210,8 @@ function autoSeedIfEmpty() {
     VALUES (?, ?, ?, ?, ?)
   `);
   const tenant = insertTenant.run(
-    'Rajeshwar Annapurna Tiffin Kitchens',
-    'rajeshwar-jaipur',
+    'Vaibhav Annapurna Tiffin Kitchens',
+    'vaibhav-jaipur',
     '08AABCR1234F1Z5',
     '+91-9829001122',
     'Plot 15, Food Craft Zone, Sitapura Industrial Area, Jaipur 302022'
@@ -286,7 +286,7 @@ function autoSeedIfEmpty() {
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
 
-  insertAudit.run(tenantId, 'Chef Rajesh', 'owner', 'CREATE_TENANT', 'TENANT', tenantId, 'Registered Rajeshwar Annapurna Tiffin Kitchens with GSTIN 08AABCR1234F1Z5');
+  insertAudit.run(tenantId, 'Chef Rajesh', 'owner', 'CREATE_TENANT', 'TENANT', tenantId, 'Registered Vaibhav Annapurna Tiffin Kitchens with GSTIN 08AABCR1234F1Z5');
   insertAudit.run(tenantId, 'Pooja Mehta', 'customer', 'SCHEDULE_PAUSE', 'PAUSE_LOG', 1, 'Customer requested pause for Udaipur wedding (Sept 14-18) via WhatsApp Bot');
   insertAudit.run(tenantId, 'Chef Rajesh', 'owner', 'CUTOFF_LOCKED', 'SYSTEM', 0, '9:00 AM Morning Cutoff locked kitchen prep numbers');
 

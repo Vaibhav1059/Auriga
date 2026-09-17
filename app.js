@@ -24,7 +24,7 @@ const INITIAL_AUDIT_LOGS = [
   { id: 104, actor_name: 'Mukesh Saini (Driver)', actor_role: 'driver', action: 'DELIVERY_STATUS_UPDATE', entity_type: 'DELIVERY_RUN', entity_id: 1, details: 'Stop #1 (Amit Singhal) marked DELIVERED with contactless door drop', ip_address: '106.51.24.12', timestamp: '2026-09-17 12:35:10' },
   { id: 103, actor_name: 'Chef Rajesh Sharma', actor_role: 'owner', action: 'CUTOFF_LOCKED', entity_type: 'SYSTEM', entity_id: 0, details: '9:00 AM Morning Cutoff strictly locked kitchen prep count to 5 active dabbas', ip_address: '127.0.0.1', timestamp: '2026-09-17 09:00:00' },
   { id: 102, actor_name: 'Pooja Mehta', actor_role: 'customer', action: 'SCHEDULE_PAUSE', entity_type: 'PAUSE_LOG', entity_id: 2, details: 'Customer requested pause for Udaipur wedding (Sept 14-18) via WhatsApp Bot', ip_address: '49.36.110.82', timestamp: '2026-09-13 21:14:05' },
-  { id: 101, actor_name: 'Chef Rajesh Sharma', actor_role: 'owner', action: 'CREATE_TENANT', entity_type: 'TENANT', entity_id: 1, details: 'Registered Rajeshwar Annapurna Tiffin Kitchens with GSTIN 08AABCR1234F1Z5', ip_address: '127.0.0.1', timestamp: '2026-09-01 10:00:00' }
+  { id: 101, actor_name: 'Chef Rajesh Sharma', actor_role: 'owner', action: 'CREATE_TENANT', entity_type: 'TENANT', entity_id: 1, details: 'Registered Vaibhav Annapurna Tiffin Kitchens with GSTIN 08AABCR1234F1Z5', ip_address: '127.0.0.1', timestamp: '2026-09-01 10:00:00' }
 ];
 
 // Messy sample benchmark dataset for Level 3 — T4
@@ -147,7 +147,7 @@ function App() {
 
   // WhatsApp Chat Simulator State
   const [chatMessages, setChatMessages] = useState([
-    { sender: 'bot', text: '🍱 Namaste! Welcome to Rajeshwar Annapurna Tiffin Assistant.\nReply with MENU, PAUSE, RESUME, or BILL.' }
+    { sender: 'bot', text: '🍱 Namaste! Welcome to Vaibhav Annapurna Tiffin Assistant.\nReply with MENU, PAUSE, RESUME, or BILL.' }
   ]);
   const [chatInput, setChatInput] = useState('');
 
@@ -565,7 +565,7 @@ function App() {
                   Enterprise 2.0
                 </span>
               </div>
-              <p className="text-[11px] text-[var(--text-secondary)] hidden sm:block">Rajeshwar Annapurna Kitchens • GSTIN: 08AABCR1234F1Z5</p>
+              <p className="text-[11px] text-[var(--text-secondary)] hidden sm:block">Vaibhav Annapurna Kitchens &nbsp;•&nbsp; GSTIN: 08AABCR1234F1Z5</p>
             </div>
           </div>
 
@@ -1345,7 +1345,7 @@ function App() {
                     🍱
                   </div>
                   <div>
-                    <div className="font-bold text-sm">Rajeshwar Tiffin Bot</div>
+                    <div className="font-bold text-sm">Vaibhav Tiffin Bot</div>
                     <div className="text-[11px] text-emerald-100 flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                       Online • Verified API
@@ -1914,7 +1914,7 @@ function App() {
           -------------------------------------------------------------------- */}
       {billModal && (() => {
         const math = calculateProratedMath(billModal.monthly_price, '2026-09', billModal.pause_logs, true);
-        const rawBillText = `🍱 *TIFFINFLOW TAX INVOICE* 🍱\nRajeshwar Annapurna Kitchens\nGSTIN: 08AABCR1234F1Z5 | SAC: 996331\nCustomer: ${billModal.name}\nMonth: September 2026\nPlan: ${billModal.plan_name} (₹${billModal.monthly_price}/mo)\nDelivered Days: ${math.deliveredWeekdays} weekdays\nPaused Days: ${math.pausedWeekdays} days\nTaxable Amount: ₹${math.taxableAmount}\nCGST (2.5%): ₹${math.cgst}\nSGST (2.5%): ₹${math.sgst}\n*Total Payable: ₹${math.finalAmount}*\nCustomer Saved: ₹${math.savings}`;
+        const rawBillText = `🍱 *TIFFINFLOW TAX INVOICE* 🍱\nVaibhav Annapurna Kitchens\nGSTIN: 08AABCR1234F1Z5 | SAC: 996331\nCustomer: ${billModal.name}\nMonth: September 2026\nPlan: ${billModal.plan_name} (₹${billModal.monthly_price}/mo)\nDelivered Days: ${math.deliveredWeekdays} weekdays\nPaused Days: ${math.pausedWeekdays} days\nTaxable Amount: ₹${math.taxableAmount}\nCGST (2.5%): ₹${math.cgst}\nSGST (2.5%): ₹${math.sgst}\n*Total Payable: ₹${math.finalAmount}*\nCustomer Saved: ₹${math.savings}`;
         const whatsappLink = `https://wa.me/91${billModal.phone}?text=${encodeURIComponent(rawBillText)}`;
 
         return (
@@ -1928,7 +1928,7 @@ function App() {
                     <span className="badge-brand">
                       OFFICIAL TAX INVOICE
                     </span>
-                    <h3 className="text-xl font-bold text-[var(--text-primary)] mt-1">Rajeshwar Annapurna Tiffin Kitchens</h3>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)] mt-1">Vaibhav Annapurna Tiffin Kitchens</h3>
                     <p className="text-xs text-[var(--text-secondary)]">GSTIN: <strong>08AABCR1234F1Z5</strong> • SAC: <strong>996331</strong> (Outdoor Catering)</p>
                   </div>
                   <div className="text-right">
@@ -2124,8 +2124,16 @@ function App() {
       )}
 
       {/* FOOTER */}
-      <footer className="border-t border-[var(--border-color)] py-6 text-center text-xs text-[var(--text-muted)]">
-        🍱 TiffinFlow SaaS Platform • Rajeshwar Annapurna Kitchens • GSTIN: 08AABCR1234F1Z5 • Fair Pro-Rated Weekday Billing Engine
+      <footer className="border-t border-[var(--border-color)] py-6 px-4 text-center text-xs text-[var(--text-muted)]">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          <span className="font-semibold text-[var(--text-primary)]">🍱 TiffinFlow SaaS Platform</span>
+          <span className="text-[var(--text-muted)] opacity-50">•</span>
+          <span>Vaibhav Annapurna Kitchens</span>
+          <span className="text-[var(--text-muted)] opacity-50">•</span>
+          <span className="font-mono">GSTIN: 08AABCR1234F1Z5</span>
+          <span className="text-[var(--text-muted)] opacity-50">•</span>
+          <span>Fair Pro-Rated Weekday Billing Engine</span>
+        </div>
       </footer>
 
     </div>

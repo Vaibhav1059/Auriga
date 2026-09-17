@@ -2,7 +2,7 @@
 
 > **Round 2 "Builder" Submission**  
 > **Problem Assignment:** `tiffin_subscription`  
-> **Enterprise Tenant:** Rajeshwar Annapurna Tiffin Kitchens (GSTIN: `08AABCR1234F1Z5`)  
+> **Enterprise Tenant:** Vaibhav Annapurna Tiffin Kitchens (GSTIN: `08AABCR1234F1Z5`)  
 > **Repository:** [https://github.com/Vaibhav1059/Auriga](https://github.com/Vaibhav1059/Auriga)
 
 ---

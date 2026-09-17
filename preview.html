@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TiffinFlow — Live Product Output & Interactive Demo</title>
+  <title>TiffinFlow — Smart Pro-Rated Tiffin Subscriptions</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,44 +19,68 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
-    :root {
+    /* Dynamic Theme Tokens */
+    html[data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-focus: #d97706;
+      --color-amber: #d97706;
+      --color-amber-light: #f59e0b;
+      --color-amber-glow: rgba(217, 119, 6, 0.12);
+      --color-emerald: #059669;
+      --color-emerald-glow: rgba(5, 150, 105, 0.12);
+      --color-rose: #e11d48;
+      --color-rose-glow: rgba(225, 29, 72, 0.12);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+    }
+
+    html[data-theme="dark"] {
       --bg-primary: #0b1120;
       --bg-surface: #131d33;
-      --bg-card: rgba(23, 37, 66, 0.7);
+      --bg-card: rgba(23, 37, 66, 0.75);
+      --bg-card-hover: rgba(30, 48, 86, 0.85);
       --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: #f59e0b;
       --color-amber: #f59e0b;
       --color-amber-light: #fbbf24;
+      --color-amber-glow: rgba(245, 158, 11, 0.18);
       --color-emerald: #10b981;
+      --color-emerald-glow: rgba(16, 185, 129, 0.18);
       --color-rose: #f43f5e;
+      --color-rose-glow: rgba(244, 63, 94, 0.18);
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
-      --font-heading: 'Outfit', sans-serif;
-      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.35);
     }
 
     body {
       background-color: var(--bg-primary);
       color: var(--text-primary);
-      font-family: var(--font-body);
+      font-family: 'Plus Jakarta Sans', sans-serif;
       min-height: 100vh;
-      background-image: 
-        radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.06) 0px, transparent 50%);
-      background-attachment: fixed;
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
     h1, h2, h3, h4 {
-      font-family: var(--font-heading);
+      font-family: 'Outfit', sans-serif;
     }
 
     .glass-card {
       background: var(--bg-card);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border-color);
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      box-shadow: var(--shadow-card);
+      transition: all 0.2s ease;
+    }
+    .glass-card:hover {
+      border-color: var(--border-focus);
     }
 
     .btn-primary {
@@ -74,8 +98,8 @@
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.07);
-      color: #fff;
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
       font-weight: 600;
       padding: 10px 18px;
       border-radius: 10px;
@@ -83,39 +107,38 @@
       transition: all 0.2s ease;
     }
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.2);
+      border-color: var(--border-focus);
     }
 
     .badge-active {
-      background: rgba(16, 185, 129, 0.18);
-      color: #34d399;
+      background: var(--color-emerald-glow);
+      color: var(--color-emerald);
       border: 1px solid rgba(16, 185, 129, 0.3);
     }
     .badge-paused {
-      background: rgba(244, 63, 94, 0.18);
-      color: #fb7185;
+      background: var(--color-rose-glow);
+      color: var(--color-rose);
       border: 1px solid rgba(244, 63, 94, 0.3);
     }
 
     .input-control {
-      background: rgba(11, 17, 32, 0.85);
+      background: var(--bg-surface);
       border: 1px solid var(--border-color);
       border-radius: 10px;
-      color: #fff;
+      color: var(--text-primary);
       padding: 10px 14px;
       outline: none;
       transition: all 0.2s ease;
     }
     .input-control:focus {
       border-color: var(--color-amber);
-      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+      box-shadow: 0 0 0 3px var(--color-amber-glow);
     }
 
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
@@ -131,7 +154,6 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // --- SEED DATA ---
     const INITIAL_PLANS = [
       { id: 1, name: 'Ghar Ki Thali (Standard Veg)', monthly_price: 2200, meal_type: 'Veg' },
       { id: 2, name: 'Shuddh Jain Satvik Box', monthly_price: 2500, meal_type: 'Jain' },
@@ -140,16 +162,15 @@
     ];
 
     const INITIAL_CUSTOMERS = [
-      { id: 1, subscription_id: 1, name: 'Amit Singhal', phone: '9829012345', address: 'Flat 402, Royal Residency, Malviya Nagar', dietary_notes: 'Less oil, no extra spicy', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [{ id: 1, start_date: '2026-09-07', end_date: '2026-09-08', reason: 'Festival Fasting' }] },
-      { id: 2, subscription_id: 2, name: 'Pooja Mehta', phone: '9829054321', address: 'Tower B, Office 305, IT Park, Sitapura', dietary_notes: 'Strictly Jain (No onion/garlic)', plan_id: 2, plan_name: 'Shuddh Jain Satvik', monthly_price: 2500, meal_type: 'Jain', status: 'PAUSED', pause_logs: [{ id: 2, start_date: '2026-09-14', end_date: '2026-09-18', reason: 'Family Wedding in Udaipur' }] },
-      { id: 3, subscription_id: 3, name: 'Vikram Rathore', phone: '9116789012', address: 'House 14, Sunrise Enclave, C-Scheme', dietary_notes: 'Gym diet, extra salad', plan_id: 4, plan_name: 'Fitness High-Protein', monthly_price: 3400, meal_type: 'Diet', status: 'ACTIVE', pause_logs: [] },
-      { id: 4, subscription_id: 4, name: 'Sneha Agarwal', phone: '9414098765', address: 'A-89, Mansarovar, Sector 5', dietary_notes: 'Regular spicy, extra curd', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] },
-      { id: 5, subscription_id: 5, name: 'Karan Verma', phone: '9784112233', address: 'Co-working Pod 12, WTP, JLN Marg', dietary_notes: 'No capsicum', plan_id: 3, plan_name: 'Executive Deluxe', monthly_price: 3000, meal_type: 'Veg', status: 'PAUSED', pause_logs: [{ id: 3, start_date: '2026-09-15', end_date: '2026-09-18', reason: 'WFH this week' }] },
-      { id: 6, subscription_id: 6, name: 'Ritu Bhasin', phone: '9650044556', address: 'Flat 701, Silver Crest, Jagatpura', dietary_notes: 'Allergic to peanuts', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] },
-      { id: 7, subscription_id: 7, name: 'Deepak Choudhary', phone: '9001234567', address: 'Plot 22, Gopalpura Bypass, Jaipur', dietary_notes: 'Extra roti requested', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] }
+      { id: 1, subscription_id: 1, name: 'Amit Singhal', phone: '9829012345', locality: 'Malviya Nagar', address: 'Flat 402, Royal Residency, Malviya Nagar', dietary_notes: 'Less oil, no extra spicy', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [{ id: 1, start_date: '2026-09-07', end_date: '2026-09-08', reason: 'Festival Fasting' }] },
+      { id: 2, subscription_id: 2, name: 'Pooja Mehta', phone: '9829054321', locality: 'Sitapura', address: 'Tower B, Office 305, IT Park, Sitapura', dietary_notes: 'Strictly Jain (No onion/garlic)', plan_id: 2, plan_name: 'Shuddh Jain Satvik', monthly_price: 2500, meal_type: 'Jain', status: 'PAUSED', pause_logs: [{ id: 2, start_date: '2026-09-14', end_date: '2026-09-18', reason: 'Family Wedding in Udaipur' }] },
+      { id: 3, subscription_id: 3, name: 'Vikram Rathore', phone: '9116789012', locality: 'C-Scheme', address: 'House 14, Sunrise Enclave, C-Scheme', dietary_notes: 'Gym diet, extra salad', plan_id: 4, plan_name: 'Fitness High-Protein', monthly_price: 3400, meal_type: 'Diet', status: 'ACTIVE', pause_logs: [] },
+      { id: 4, subscription_id: 4, name: 'Sneha Agarwal', phone: '9414098765', locality: 'Mansarovar', address: 'A-89, Mansarovar, Sector 5', dietary_notes: 'Regular spicy, extra curd', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] },
+      { id: 5, subscription_id: 5, name: 'Karan Verma', phone: '9784112233', locality: 'Malviya Nagar', address: 'Co-working Pod 12, WTP, JLN Marg', dietary_notes: 'No capsicum', plan_id: 3, plan_name: 'Executive Deluxe', monthly_price: 3000, meal_type: 'Veg', status: 'PAUSED', pause_logs: [{ id: 3, start_date: '2026-09-15', end_date: '2026-09-18', reason: 'WFH this week' }] },
+      { id: 6, subscription_id: 6, name: 'Ritu Bhasin', phone: '9650044556', locality: 'Jagatpura', address: 'Flat 701, Silver Crest, Jagatpura', dietary_notes: 'Allergic to peanuts', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] },
+      { id: 7, subscription_id: 7, name: 'Deepak Choudhary', phone: '9001234567', locality: 'Gopalpura', address: 'Plot 22, Gopalpura Bypass, Jaipur', dietary_notes: 'Extra roti requested', plan_id: 1, plan_name: 'Ghar Ki Thali', monthly_price: 2200, meal_type: 'Veg', status: 'ACTIVE', pause_logs: [] }
     ];
 
-    // Math Engine helper for pro-rating
     function calculateProratedMath(monthlyPrice, monthStr, pauseLogs) {
       const [year, month] = monthStr.split('-').map(Number);
       const daysInMonth = new Date(year, month, 0).getDate();
@@ -169,7 +190,6 @@
 
         const pause = pauseLogs.find(p => dateStr >= p.start_date && dateStr <= p.end_date);
         let status = 'DELIVERED';
-        let charge = 0;
 
         if (!isWeekday) {
           status = 'WEEKEND';
@@ -192,24 +212,40 @@
     }
 
     function App() {
-      const [activeTab, setActiveTab] = useState('landing'); // 'landing', 'dashboard', 'dispatch'
+      const [theme, setTheme] = useState('light'); // 'light' or 'dark'
+      const [activeTab, setActiveTab] = useState('dashboard'); // 'landing', 'dashboard', 'dispatch'
       const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
       const [search, setSearch] = useState('');
       const [statusFilter, setStatusFilter] = useState('ALL');
+      const [localityFilter, setLocalityFilter] = useState('ALL');
       const [phoneQuery, setPhoneQuery] = useState('');
       const [matchedCustomer, setMatchedCustomer] = useState(null);
+
+      // Today's special menu
+      const [todaysMenu, setTodaysMenu] = useState({
+        sabzi: 'Paneer Butter Masala & Seasonal Aloo Gobi',
+        dal: 'Dal Tadka (Jeera & Ghee)',
+        breads: '4 Warm Butter Phulkas',
+        rice: 'Steamed Jeera Rice',
+        extras: 'Fresh Salad, Boondi Raita & Gulab Jamun'
+      });
+      const [editingMenu, setEditingMenu] = useState(false);
 
       // Modals
       const [pauseModal, setPauseModal] = useState(null);
       const [billModal, setBillModal] = useState(null);
       const [newSubModal, setNewSubModal] = useState(false);
-      const [authModal, setAuthModal] = useState(false);
-      const [user, setUser] = useState({ name: 'Chef Rajesh Sharma', role: 'owner' });
       const [notification, setNotification] = useState(null);
 
       // Pagination
       const [currentPage, setCurrentPage] = useState(1);
       const pageSize = 5;
+
+      const toggleTheme = () => {
+        const next = theme === 'light' ? 'dark' : 'light';
+        setTheme(next);
+        document.documentElement.setAttribute('data-theme', next);
+      };
 
       const triggerNotification = (msg) => {
         setNotification(msg);
@@ -254,11 +290,11 @@
         triggerNotification(`Subscribed ${newCust.name} successfully!`);
       };
 
-      // Filtered customers
       const filtered = customers.filter(c => {
         const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search) || c.address.toLowerCase().includes(search.toLowerCase());
         const matchesStatus = statusFilter === 'ALL' || c.status === statusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesLocality = localityFilter === 'ALL' || c.locality === localityFilter;
+        return matchesSearch && matchesStatus && matchesLocality;
       });
 
       const totalPages = Math.ceil(filtered.length / pageSize) || 1;
@@ -267,24 +303,27 @@
       const activeCount = customers.filter(c => c.status === 'ACTIVE').length;
       const pausedCount = customers.filter(c => c.status === 'PAUSED').length;
 
+      // Unique localities for delivery route sorting
+      const localities = Array.from(new Set(customers.map(c => c.locality))).filter(Boolean);
+
       return (
         <div className="min-h-screen flex flex-col">
           {/* TOP NAVBAR */}
-          <header className="sticky top-0 z-50 bg-[#0b1120]/90 backdrop-blur-md border-b border-white/10">
+          <header className="sticky top-0 z-50 bg-[var(--bg-surface)] border-b border-[var(--border-color)] shadow-sm">
             <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
               {/* Logo */}
               <div onClick={() => setActiveTab('landing')} className="flex items-center gap-3 cursor-pointer">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/30">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/25">
                   🍱
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl font-black text-white tracking-tight">Tiffin<span className="text-amber-500">Flow</span></span>
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      Live Output
+                    <span className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Tiffin<span className="text-[var(--color-amber)]">Flow</span></span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full badge-active">
+                      Pro-Rated OS
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400">Pro-Rated Billing & Kitchen Dispatch</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Home-Style Tiffin Billing & Kitchen Dispatch</p>
                 </div>
               </div>
 
@@ -310,34 +349,33 @@
                 </button>
               </nav>
 
-              {/* Action */}
+              {/* Theme Toggle & Actions */}
               <div className="flex items-center gap-3">
+                {/* LIGHT / DARK THEME TOGGLE BUTTON */}
+                <button
+                  onClick={toggleTheme}
+                  className="px-3.5 py-2 rounded-lg text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-card-hover)] text-[var(--text-primary)] hover:border-[var(--color-amber)] flex items-center gap-2 transition"
+                  title="Toggle Light / Dark Mode"
+                >
+                  {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+                </button>
+
                 <button
                   onClick={() => setNewSubModal(true)}
-                  className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 transition"
+                  className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg border border-[var(--color-amber)] text-[var(--color-amber)] hover:bg-[var(--color-amber-glow)] transition"
                 >
                   + Add Subscriber
                 </button>
-                {user ? (
-                  <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-white/5">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                    <span className="text-xs font-medium text-slate-200">{user.name}</span>
-                  </div>
-                ) : (
-                  <button onClick={() => setAuthModal(true)} className="btn-primary text-xs px-4 py-2">
-                    Login
-                  </button>
-                )}
               </div>
             </div>
           </header>
 
           {/* NOTIFICATION TOAST */}
           {notification && (
-            <div className="max-w-7xl mx-auto w-full px-4 mt-4">
-              <div className="bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-4 py-2.5 rounded-xl flex items-center justify-between text-sm shadow-lg">
+            <div className="max-w-7xl mx-auto w-full px-4 mt-4 animate-fade-in">
+              <div className="bg-[var(--color-emerald-glow)] border border-[var(--color-emerald)] text-[var(--color-emerald)] px-4 py-2.5 rounded-xl flex items-center justify-between text-sm shadow-md font-semibold">
                 <span>✅ {notification}</span>
-                <button onClick={() => setNotification(null)} className="font-bold text-emerald-400">✕</button>
+                <button onClick={() => setNotification(null)} className="font-bold">✕</button>
               </div>
             </div>
           )}
@@ -347,19 +385,19 @@
             
             {/* TAB 1: ONE-PAGE LANDING PAGE */}
             {activeTab === 'landing' && (
-              <div className="space-y-14">
+              <div className="space-y-12 animate-fade-in">
                 {/* Hero */}
-                <div className="text-center py-10 space-y-5">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider">
+                <div className="text-center py-8 space-y-4">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-amber-glow)] border border-[var(--color-amber)] text-[var(--color-amber)] text-xs font-bold uppercase tracking-wider">
                     ⚡ Solves the Storyline & The Twist
                   </div>
-                  <h1 className="text-4xl md:text-6xl font-black text-white leading-tight">
-                    Every customer billed <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">only for the days</span> actually served.
+                  <h1 className="text-4xl md:text-6xl font-black text-[var(--text-primary)] leading-tight">
+                    Every customer billed <br/><span className="text-[var(--color-amber)]">only for the days</span> actually served.
                   </h1>
-                  <p className="text-slate-300 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                  <p className="text-[var(--text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
                     The smart operating system for home-style tiffin services. Handles monthly weekday lunch delivery, 1-click vacation pause, instant phone lookup, and automated pro-rated billing.
                   </p>
-                  <div className="flex justify-center gap-4 pt-4">
+                  <div className="flex justify-center gap-4 pt-3">
                     <button onClick={() => setActiveTab('dashboard')} className="btn-primary text-base px-8 py-3.5 flex items-center gap-2">
                       Try Interactive Dashboard & Billing →
                     </button>
@@ -373,19 +411,19 @@
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Section 1 */}
                   <div className="glass-card p-6 border-l-4 border-amber-500 space-y-2">
-                    <span className="text-xs uppercase font-bold text-amber-400">Section 1</span>
-                    <h3 className="text-xl font-bold text-white">What is TiffinFlow?</h3>
-                    <p className="text-slate-300 text-sm leading-relaxed">
+                    <span className="text-xs uppercase font-bold text-[var(--color-amber)]">Section 1</span>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)]">What is TiffinFlow?</h3>
+                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
                       A dedicated subscription and pro-rated invoicing engine for home tiffin businesses. Subscriptions run on a monthly schedule delivered every weekday (Mon–Fri). When subscribers take leave for travel, festivals, or holidays, TiffinFlow halts delivery and automatically calculates month-end bills charging only for weekdays served.
                     </p>
                   </div>
 
                   {/* Section 2 */}
                   <div className="glass-card p-6 border-l-4 border-emerald-500 space-y-2">
-                    <span className="text-xs uppercase font-bold text-emerald-400">Section 2</span>
-                    <h3 className="text-xl font-bold text-white">Key Features</h3>
-                    <ul className="text-slate-300 text-sm space-y-1.5 list-disc list-inside">
-                      <li><strong>Automated Pro-Rated Billing:</strong> Exact formula <code className="text-amber-300">(Monthly Rate / Weekdays) × Days Delivered</code>.</li>
+                    <span className="text-xs uppercase font-bold text-[var(--color-emerald)]">Section 2</span>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)]">Key Features</h3>
+                    <ul className="text-[var(--text-secondary)] text-sm space-y-1.5 list-disc list-inside">
+                      <li><strong>Automated Pro-Rated Billing:</strong> Exact formula <code className="text-[var(--color-amber)] font-bold">(Monthly Rate / Weekdays) × Days Delivered</code>.</li>
                       <li><strong>1-Click Vacation Pause:</strong> Pick date ranges with automatic weekend exclusion.</li>
                       <li><strong>Instant Phone Search:</strong> Fast lookups during customer phone calls.</li>
                       <li><strong>Kitchen Dispatch Board:</strong> Live morning counts (Cook vs Paused).</li>
@@ -394,45 +432,45 @@
 
                   {/* Section 3 */}
                   <div className="glass-card p-6 border-l-4 border-blue-500 space-y-2">
-                    <span className="text-xs uppercase font-bold text-blue-400">Section 3</span>
-                    <h3 className="text-xl font-bold text-white">Target Audience</h3>
-                    <p className="text-slate-300 text-sm leading-relaxed">
+                    <span className="text-xs uppercase font-bold text-blue-500">Section 3</span>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)]">Target Audience</h3>
+                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
                       Home chefs delivering 10–50 dabbas daily, commercial caterers serving corporate IT parks and university hostels, and healthy diet/meal-prep kitchens requiring flexible weekday lunch subscriptions.
                     </p>
                   </div>
 
                   {/* Section 4 */}
                   <div className="glass-card p-6 border-l-4 border-rose-500 space-y-2">
-                    <span className="text-xs uppercase font-bold text-rose-400">Section 4</span>
-                    <h3 className="text-xl font-bold text-white">How It Helps</h3>
-                    <p className="text-slate-300 text-sm leading-relaxed">
+                    <span className="text-xs uppercase font-bold text-[var(--color-rose)]">Section 4</span>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)]">How It Helps</h3>
+                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
                       Eliminates heated month-end billing disputes over missed meals, reduces morning raw grocery wastage by up to 18% through exact daily meal counts, and saves hours spent wrestling with handwritten diaries and WhatsApp messages.
                     </p>
                   </div>
                 </div>
 
                 {/* Section 5 */}
-                <div className="glass-card p-8 bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 border border-amber-500/30 space-y-4">
+                <div className="glass-card p-8 border border-[var(--color-amber)] space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs uppercase font-bold text-amber-400 tracking-wider">Section 5</span>
-                    <span className="text-xs font-semibold text-slate-400">Product Vision</span>
+                    <span className="text-xs uppercase font-bold text-[var(--color-amber)] tracking-wider">Section 5</span>
+                    <span className="text-xs font-semibold text-[var(--text-muted)]">Product Roadmap</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-white">Three Features We Would Build Next</h3>
+                  <h3 className="text-2xl font-bold text-[var(--text-primary)]">Three Features We Would Build Next</h3>
                   <div className="grid md:grid-cols-3 gap-5 pt-2">
-                    <div className="bg-slate-950/70 p-4 rounded-xl border border-white/5 space-y-1">
+                    <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-1">
                       <div className="text-2xl">🤖 1.</div>
-                      <h4 className="font-bold text-white text-base">WhatsApp AI Pause Bot</h4>
-                      <p className="text-slate-400 text-xs leading-relaxed">Customers text "Pause my lunch till Monday", parsed automatically via natural language processing to update kitchen counts.</p>
+                      <h4 className="font-bold text-[var(--text-primary)] text-base">WhatsApp AI Pause Bot</h4>
+                      <p className="text-[var(--text-secondary)] text-xs leading-relaxed">Customers text "Pause my lunch till Monday", parsed automatically via natural language processing to update kitchen counts.</p>
                     </div>
-                    <div className="bg-slate-950/70 p-4 rounded-xl border border-white/5 space-y-1">
+                    <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-1">
                       <div className="text-2xl">🗺️ 2.</div>
-                      <h4 className="font-bold text-white text-base">Delivery Boy Route Optimizer</h4>
-                      <p className="text-slate-400 text-xs leading-relaxed">Smart GPS route clustering for active daily drops, completely skipping paused homes to save travel time and fuel.</p>
+                      <h4 className="font-bold text-[var(--text-primary)] text-base">Delivery Boy Route Optimizer</h4>
+                      <p className="text-[var(--text-secondary)] text-xs leading-relaxed">Smart GPS route clustering for active daily drops, completely skipping paused homes to save travel time and fuel.</p>
                     </div>
-                    <div className="bg-slate-950/70 p-4 rounded-xl border border-white/5 space-y-1">
+                    <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-1">
                       <div className="text-2xl">💳 3.</div>
-                      <h4 className="font-bold text-white text-base">UPI AutoPay & WhatsApp Bill PDF</h4>
-                      <p className="text-slate-400 text-xs leading-relaxed">Automated 1st-of-the-month itemized PDF generation delivered via WhatsApp with 1-click UPI deep-link payment.</p>
+                      <h4 className="font-bold text-[var(--text-primary)] text-base">UPI AutoPay & WhatsApp Bill PDF</h4>
+                      <p className="text-[var(--text-secondary)] text-xs leading-relaxed">Automated 1st-of-the-month itemized PDF generation delivered via WhatsApp with 1-click UPI deep-link payment.</p>
                     </div>
                   </div>
                 </div>
@@ -441,47 +479,98 @@
 
             {/* TAB 2: DASHBOARD, PHONE SEARCH & PRO-RATED BILLING */}
             {activeTab === 'dashboard' && (
-              <div className="space-y-6">
+              <div className="space-y-6 animate-fade-in">
                 
                 {/* 4 Summary KPI Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="glass-card p-4 border-l-4 border-emerald-500">
-                    <span className="text-xs text-slate-400 font-medium">Active Subscriptions</span>
-                    <div className="text-3xl font-black text-white mt-1">{activeCount}</div>
-                    <span className="text-[11px] text-emerald-400">Receiving lunch</span>
+                    <span className="text-xs text-[var(--text-muted)] font-medium">Active Subscriptions</span>
+                    <div className="text-3xl font-black text-[var(--text-primary)] mt-1">{activeCount}</div>
+                    <span className="text-[11px] text-[var(--color-emerald)] font-semibold">Receiving lunch</span>
                   </div>
                   <div className="glass-card p-4 border-l-4 border-amber-500">
-                    <span className="text-xs text-slate-400 font-medium">Today's Lunch Count</span>
-                    <div className="text-3xl font-black text-amber-400 mt-1">{activeCount} <span className="text-xs text-slate-400 font-normal">dabbas</span></div>
-                    <span className="text-[11px] text-slate-400">Weekdays delivery</span>
+                    <span className="text-xs text-[var(--text-muted)] font-medium">Today's Lunch Count</span>
+                    <div className="text-3xl font-black text-[var(--color-amber)] mt-1">{activeCount} <span className="text-xs text-[var(--text-muted)] font-normal">dabbas</span></div>
+                    <span className="text-[11px] text-[var(--text-muted)]">Weekdays delivery</span>
                   </div>
                   <div className="glass-card p-4 border-l-4 border-rose-500">
-                    <span className="text-xs text-slate-400 font-medium">Currently Paused</span>
-                    <div className="text-3xl font-black text-rose-400 mt-1">{pausedCount}</div>
-                    <span className="text-[11px] text-rose-400">On vacation / festival</span>
+                    <span className="text-xs text-[var(--text-muted)] font-medium">Currently Paused</span>
+                    <div className="text-3xl font-black text-[var(--color-rose)] mt-1">{pausedCount}</div>
+                    <span className="text-[11px] text-[var(--color-rose)] font-semibold">On vacation / festival</span>
                   </div>
                   <div className="glass-card p-4 border-l-4 border-blue-500">
-                    <span className="text-xs text-slate-400 font-medium">Projected Monthly</span>
-                    <div className="text-3xl font-black text-white mt-1">₹18,300</div>
-                    <span className="text-[11px] text-slate-400">Auto-prorated at month end</span>
+                    <span className="text-xs text-[var(--text-muted)] font-medium">Projected Monthly</span>
+                    <div className="text-3xl font-black text-[var(--text-primary)] mt-1">₹18,300</div>
+                    <span className="text-[11px] text-[var(--text-muted)]">Auto-prorated at month end</span>
                   </div>
+                </div>
+
+                {/* TODAY'S SPECIAL KITCHEN MENU CARD (FEATURE ADDITION) */}
+                <div className="glass-card p-5 border border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-transparent">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🍲</span>
+                      <div>
+                        <h4 className="font-bold text-[var(--text-primary)] text-sm">Today's Cooking Menu (Dispatch Spec)</h4>
+                        <p className="text-xs text-[var(--text-secondary)]">Broadcasted to customers and kitchen dispatch staff</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setEditingMenu(!editingMenu)} 
+                      className="text-xs font-bold text-[var(--color-amber)] hover:underline"
+                    >
+                      {editingMenu ? 'Done Editing' : '✏️ Edit Menu'}
+                    </button>
+                  </div>
+
+                  {editingMenu ? (
+                    <div className="grid md:grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <label className="text-[var(--text-muted)] block mb-1">Main Sabzi</label>
+                        <input className="input-control w-full text-xs" value={todaysMenu.sabzi} onChange={(e) => setTodaysMenu({ ...todaysMenu, sabzi: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="text-[var(--text-muted)] block mb-1">Dal Special</label>
+                        <input className="input-control w-full text-xs" value={todaysMenu.dal} onChange={(e) => setTodaysMenu({ ...todaysMenu, dal: e.target.value })} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                      <div className="p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                        <span className="text-[var(--text-muted)] block text-[10px] uppercase font-bold">Curry / Sabzi</span>
+                        <strong className="text-[var(--text-primary)]">{todaysMenu.sabzi}</strong>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                        <span className="text-[var(--text-muted)] block text-[10px] uppercase font-bold">Lentil / Dal</span>
+                        <strong className="text-[var(--text-primary)]">{todaysMenu.dal}</strong>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                        <span className="text-[var(--text-muted)] block text-[10px] uppercase font-bold">Breads & Rice</span>
+                        <strong className="text-[var(--text-primary)]">{todaysMenu.breads}, {todaysMenu.rice}</strong>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                        <span className="text-[var(--text-muted)] block text-[10px] uppercase font-bold">Accompaniments</span>
+                        <strong className="text-[var(--text-primary)]">{todaysMenu.extras}</strong>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* INSTANT PHONE SEARCH CARD (Problem brief centerpiece) */}
                 <div className="glass-card p-6 border border-amber-500/30">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                     <div>
-                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                         📞 Instant Phone Number Lookup
                       </h3>
-                      <p className="text-xs text-slate-400">Search customer by phone to view current status, pause logs, and live bill</p>
+                      <p className="text-xs text-[var(--text-secondary)]">Search customer by phone to view current status, pause logs, and live bill</p>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="text-slate-400">Try demo:</span>
-                      <button onClick={() => handlePhoneSearch('9829012345')} className="px-2.5 py-1 rounded bg-slate-800 text-amber-400 border border-slate-700 hover:border-amber-500/50">
+                      <span className="text-[var(--text-muted)]">Try demo:</span>
+                      <button onClick={() => handlePhoneSearch('9829012345')} className="px-2.5 py-1 rounded bg-[var(--bg-surface)] text-[var(--color-amber)] border border-[var(--border-color)] font-bold">
                         Amit (Active)
                       </button>
-                      <button onClick={() => handlePhoneSearch('9829054321')} className="px-2.5 py-1 rounded bg-slate-800 text-rose-400 border border-slate-700 hover:border-rose-500/50">
+                      <button onClick={() => handlePhoneSearch('9829054321')} className="px-2.5 py-1 rounded bg-[var(--bg-surface)] text-[var(--color-rose)] border border-[var(--border-color)] font-bold">
                         Pooja (Paused)
                       </button>
                     </div>
@@ -495,24 +584,24 @@
                       value={phoneQuery}
                       onChange={(e) => handlePhoneSearch(e.target.value)}
                     />
-                    <span className="absolute left-4 top-3 text-slate-400">🔍</span>
+                    <span className="absolute left-4 top-3 text-[var(--text-muted)]">🔍</span>
                   </div>
 
                   {/* Matched Customer Live Card */}
                   {matchedCustomer && (
-                    <div className="mt-4 p-4 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
+                    <div className="mt-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in shadow-md">
                       <div>
                         <div className="flex items-center gap-3">
-                          <h4 className="text-lg font-bold text-white">{matchedCustomer.name}</h4>
+                          <h4 className="text-lg font-bold text-[var(--text-primary)]">{matchedCustomer.name}</h4>
                           <span className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full ${matchedCustomer.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>
                             {matchedCustomer.status === 'ACTIVE' ? '● Active for Lunch' : '⏸️ Currently Paused'}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-1">📞 {matchedCustomer.phone} • 📍 {matchedCustomer.address}</p>
-                        <p className="text-xs text-amber-400 mt-0.5">🍱 Plan: {matchedCustomer.plan_name} (₹{matchedCustomer.monthly_price}/mo) • <em>{matchedCustomer.dietary_notes}</em></p>
+                        <p className="text-xs text-[var(--text-secondary)] mt-1">📞 {matchedCustomer.phone} • 📍 {matchedCustomer.address} ({matchedCustomer.locality})</p>
+                        <p className="text-xs text-[var(--color-amber)] font-semibold mt-0.5">🍱 Plan: {matchedCustomer.plan_name} (₹{matchedCustomer.monthly_price}/mo) • <em>{matchedCustomer.dietary_notes}</em></p>
                         
                         {matchedCustomer.pause_logs.length > 0 && (
-                          <div className="mt-2 text-xs text-rose-300">
+                          <div className="mt-2 text-xs text-[var(--color-rose)] font-medium">
                             <strong>Recorded Pauses:</strong> {matchedCustomer.pause_logs.map(p => `${p.start_date} to ${p.end_date} (${p.reason})`).join(', ')}
                           </div>
                         )}
@@ -520,11 +609,11 @@
 
                       <div className="flex gap-2 shrink-0">
                         {matchedCustomer.status === 'PAUSED' ? (
-                          <button onClick={() => handleResume(matchedCustomer.subscription_id)} className="btn-secondary text-xs px-3 py-2 text-emerald-400 border-emerald-500/40">
+                          <button onClick={() => handleResume(matchedCustomer.subscription_id)} className="btn-secondary text-xs px-3 py-2 text-emerald-600 font-bold border-emerald-500/40">
                             ▶ Resume Delivery
                           </button>
                         ) : (
-                          <button onClick={() => setPauseModal(matchedCustomer)} className="btn-secondary text-xs px-3 py-2 text-rose-400 border-rose-500/40">
+                          <button onClick={() => setPauseModal(matchedCustomer)} className="btn-secondary text-xs px-3 py-2 text-rose-600 font-bold border-rose-500/40">
                             ⏸️ Set Pause
                           </button>
                         )}
@@ -536,21 +625,29 @@
                   )}
                 </div>
 
-                {/* SUBSCRIBER TABLE WITH SEARCH, SORT & PAGINATION */}
+                {/* SUBSCRIBER TABLE WITH SEARCH, LOCALITY FILTER, SORT & PAGINATION */}
                 <div className="glass-card p-6 space-y-4">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <h3 className="text-lg font-bold text-white">All Subscribers & Monthly Subscriptions</h3>
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">All Subscribers & Monthly Subscriptions</h3>
                     
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <input
                         type="text"
                         placeholder="Search name, phone, address..."
-                        className="input-control text-xs w-60"
+                        className="input-control text-xs w-48"
                         value={search}
                         onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                       />
                       <select
-                        className="input-control text-xs"
+                        className="input-control text-xs w-32"
+                        value={localityFilter}
+                        onChange={(e) => { setLocalityFilter(e.target.value); setCurrentPage(1); }}
+                      >
+                        <option value="ALL">All Areas</option>
+                        {localities.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                      </select>
+                      <select
+                        className="input-control text-xs w-28"
                         value={statusFilter}
                         onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
                       >
@@ -564,26 +661,32 @@
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                       <thead>
-                        <tr className="border-b border-white/10 text-slate-400 text-xs">
+                        <tr className="border-b border-[var(--border-color)] text-[var(--text-muted)] text-xs">
                           <th className="pb-3 font-semibold">Subscriber</th>
                           <th className="pb-3 font-semibold">Phone</th>
+                          <th className="pb-3 font-semibold">Area / Locality</th>
                           <th className="pb-3 font-semibold">Plan & Meal Type</th>
                           <th className="pb-3 font-semibold">Status</th>
                           <th className="pb-3 font-semibold text-right">Actions & Billing</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/5">
+                      <tbody className="divide-y divide-[var(--border-color)]">
                         {paginated.map(c => (
-                          <tr key={c.id} className="hover:bg-white/[0.02] transition">
+                          <tr key={c.id} className="hover:bg-[var(--bg-card-hover)] transition">
                             <td className="py-3">
-                              <div className="font-bold text-white">{c.name}</div>
-                              <div className="text-xs text-slate-400">{c.address}</div>
-                              {c.dietary_notes && <div className="text-[11px] text-amber-400/80">🥗 {c.dietary_notes}</div>}
+                              <div className="font-bold text-[var(--text-primary)]">{c.name}</div>
+                              <div className="text-xs text-[var(--text-muted)]">{c.address}</div>
+                              {c.dietary_notes && <div className="text-[11px] text-[var(--color-amber)] font-medium">🥗 {c.dietary_notes}</div>}
                             </td>
-                            <td className="py-3 font-mono text-slate-300 text-xs">{c.phone}</td>
+                            <td className="py-3 font-mono text-[var(--text-secondary)] text-xs">{c.phone}</td>
                             <td className="py-3">
-                              <div className="text-slate-200 font-medium">{c.plan_name}</div>
-                              <div className="text-xs text-amber-400">₹{c.monthly_price}/mo ({c.meal_type})</div>
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                                📍 {c.locality || 'Jaipur'}
+                              </span>
+                            </td>
+                            <td className="py-3">
+                              <div className="text-[var(--text-primary)] font-medium">{c.plan_name}</div>
+                              <div className="text-xs text-[var(--color-amber)] font-bold">₹{c.monthly_price}/mo ({c.meal_type})</div>
                             </td>
                             <td className="py-3">
                               <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${c.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>
@@ -593,11 +696,11 @@
                             <td className="py-3 text-right">
                               <div className="inline-flex gap-2">
                                 {c.status === 'PAUSED' ? (
-                                  <button onClick={() => handleResume(c.subscription_id)} className="px-2.5 py-1.5 rounded-lg text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20">
+                                  <button onClick={() => handleResume(c.subscription_id)} className="px-2.5 py-1.5 rounded-lg text-xs bg-emerald-500/10 text-emerald-600 font-bold border border-emerald-500/30 hover:bg-emerald-500/20">
                                     ▶ Resume
                                   </button>
                                 ) : (
-                                  <button onClick={() => setPauseModal(c)} className="px-2.5 py-1.5 rounded-lg text-xs bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20">
+                                  <button onClick={() => setPauseModal(c)} className="px-2.5 py-1.5 rounded-lg text-xs bg-rose-500/10 text-rose-600 font-bold border border-rose-500/30 hover:bg-rose-500/20">
                                     ⏸️ Pause
                                   </button>
                                 )}
@@ -613,7 +716,7 @@
                   </div>
 
                   {/* Pagination Footer */}
-                  <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs text-slate-400">
+                  <div className="flex items-center justify-between pt-3 border-t border-[var(--border-color)] text-xs text-[var(--text-secondary)]">
                     <div>Showing Page {currentPage} of {totalPages} ({filtered.length} subscribers)</div>
                     <div className="flex gap-2">
                       <button
@@ -639,14 +742,14 @@
 
             {/* TAB 3: KITCHEN DISPATCH BOARD */}
             {activeTab === 'dispatch' && (
-              <div className="space-y-6">
+              <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-white">👨‍🍳 Morning Kitchen Dispatch Board</h2>
-                    <p className="text-sm text-slate-400">Pre-sorts active lunch dabbas to cook vs paused subscribers on leave today</p>
+                    <h2 className="text-2xl font-bold text-[var(--text-primary)]">👨‍🍳 Morning Kitchen Dispatch Board</h2>
+                    <p className="text-sm text-[var(--text-secondary)]">Pre-sorts active lunch dabbas to cook vs paused subscribers on leave today</p>
                   </div>
-                  <div className="bg-slate-800/80 px-4 py-2 rounded-xl border border-white/10 text-xs text-slate-300">
-                    📅 Target Date: <strong className="text-amber-400">Today (Weekday Delivery)</strong>
+                  <div className="bg-[var(--bg-surface)] px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs text-[var(--text-secondary)] shadow-sm">
+                    📅 Target Date: <strong className="text-[var(--color-amber)] font-bold">Today (Weekday Delivery)</strong>
                   </div>
                 </div>
 
@@ -654,19 +757,19 @@
                   {/* Active List */}
                   <div className="glass-card p-6 border-t-4 border-emerald-500 space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-emerald-400">✅ Cook & Pack ({activeCount} Dabbas)</h3>
-                      <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Mon–Fri Active</span>
+                      <h3 className="text-lg font-bold text-[var(--color-emerald)]">✅ Cook & Pack ({activeCount} Dabbas)</h3>
+                      <span className="text-xs px-2 py-0.5 rounded badge-active">Mon–Fri Active</span>
                     </div>
 
                     <div className="space-y-3">
                       {customers.filter(c => c.status === 'ACTIVE').map(c => (
-                        <div key={c.id} className="p-3.5 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
+                        <div key={c.id} className="p-3.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-1 shadow-sm">
                           <div className="flex justify-between items-center">
-                            <h4 className="font-bold text-white text-sm">{c.name}</h4>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-300">{c.meal_type}</span>
+                            <h4 className="font-bold text-[var(--text-primary)] text-sm">{c.name}</h4>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/15 text-[var(--color-amber)]">{c.meal_type}</span>
                           </div>
-                          <p className="text-xs text-slate-400">📞 {c.phone} • 📍 {c.address}</p>
-                          {c.dietary_notes && <p className="text-xs text-amber-400">⚠️ {c.dietary_notes}</p>}
+                          <p className="text-xs text-[var(--text-secondary)]">📞 {c.phone} • 📍 {c.address}</p>
+                          {c.dietary_notes && <p className="text-xs text-[var(--color-amber)] font-medium">⚠️ {c.dietary_notes}</p>}
                         </div>
                       ))}
                     </div>
@@ -675,19 +778,19 @@
                   {/* Paused List */}
                   <div className="glass-card p-6 border-t-4 border-rose-500 space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-rose-400">🚫 Do Not Cook - Paused ({pausedCount})</h3>
-                      <span className="text-xs px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">Zero Billing Today</span>
+                      <h3 className="text-lg font-bold text-[var(--color-rose)]">🚫 Do Not Cook - Paused ({pausedCount})</h3>
+                      <span className="text-xs px-2 py-0.5 rounded badge-paused">Zero Billing Today</span>
                     </div>
 
                     <div className="space-y-3">
                       {customers.filter(c => c.status === 'PAUSED').map(c => (
-                        <div key={c.id} className="p-3.5 rounded-xl bg-rose-950/20 border border-rose-500/20 space-y-1">
+                        <div key={c.id} className="p-3.5 rounded-xl bg-[var(--bg-surface)] border border-rose-500/30 space-y-1 shadow-sm">
                           <div className="flex justify-between items-center">
-                            <h4 className="font-bold text-white text-sm">{c.name}</h4>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">On Leave</span>
+                            <h4 className="font-bold text-[var(--text-primary)] text-sm">{c.name}</h4>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded badge-paused">On Leave</span>
                           </div>
-                          <p className="text-xs text-slate-400">📞 {c.phone}</p>
-                          <p className="text-xs text-rose-300">
+                          <p className="text-xs text-[var(--text-secondary)]">📞 {c.phone}</p>
+                          <p className="text-xs text-[var(--color-rose)] font-semibold">
                             🏖️ <strong>Reason:</strong> {c.pause_logs[0]?.reason || 'Customer requested pause'}
                           </p>
                         </div>
@@ -700,111 +803,145 @@
 
           </main>
 
-          {/* PAUSE MODAL */}
+          {/* PAUSE MODAL WITH QUICK PRESETS */}
           {pauseModal && (
             <div className="modal-overlay">
               <div className="glass-card max-w-md w-full p-6 space-y-4 relative animate-fade-in">
-                <button onClick={() => setPauseModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white">✕</button>
-                <h3 className="text-xl font-bold text-white">Pause Subscription</h3>
-                <p className="text-xs text-slate-400">For <strong>{pauseModal.name}</strong> ({pauseModal.phone})</p>
+                <button onClick={() => setPauseModal(null)} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-primary)]">✕</button>
+                <h3 className="text-xl font-bold text-[var(--text-primary)]">Pause Subscription</h3>
+                <p className="text-xs text-[var(--text-secondary)]">For <strong>{pauseModal.name}</strong> ({pauseModal.phone})</p>
 
-                <form onSubmit={(e) => {
+                {/* Quick Presets Buttons */}
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">⚡ Quick Leave Presets:</span>
+                  <div className="flex gap-2">
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        const form = document.getElementById('pauseForm');
+                        form.startDate.value = '2026-09-18';
+                        form.endDate.value = '2026-09-18';
+                        form.reason.value = 'Friday Leave';
+                      }} 
+                      className="text-xs px-2.5 py-1 rounded bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--color-amber)]"
+                    >
+                      Tomorrow (1 Day)
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        const form = document.getElementById('pauseForm');
+                        form.startDate.value = '2026-09-21';
+                        form.endDate.value = '2026-09-25';
+                        form.reason.value = 'Full Week Travel';
+                      }} 
+                      className="text-xs px-2.5 py-1 rounded bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--color-amber)]"
+                    >
+                      Next Week (5 Days)
+                    </button>
+                  </div>
+                </div>
+
+                <form id="pauseForm" onSubmit={(e) => {
                   e.preventDefault();
                   const form = e.target;
                   handlePauseSubmit(pauseModal.subscription_id, form.startDate.value, form.endDate.value, form.reason.value);
-                }} className="space-y-3">
+                }} className="space-y-3 pt-2">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400 block mb-1">Start Date</label>
+                      <label className="text-xs text-[var(--text-muted)] block mb-1">Start Date</label>
                       <input name="startDate" type="date" defaultValue="2026-09-14" required className="input-control w-full text-xs" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400 block mb-1">End Date</label>
+                      <label className="text-xs text-[var(--text-muted)] block mb-1">End Date</label>
                       <input name="endDate" type="date" defaultValue="2026-09-18" required className="input-control w-full text-xs" />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 block mb-1">Reason for Leave</label>
+                    <label className="text-xs text-[var(--text-muted)] block mb-1">Reason for Leave</label>
                     <input name="reason" type="text" defaultValue="Diwali Festival / Vacation" required className="input-control w-full text-xs" />
                   </div>
-                  <div className="text-[11px] text-amber-400 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                  <div className="text-[11px] text-[var(--color-amber)] bg-[var(--color-amber-glow)] p-2.5 rounded-lg border border-[var(--color-amber)]">
                     💡 Customer will not be billed for weekdays during this window.
                   </div>
                   <div className="flex justify-end gap-2 pt-2">
                     <button type="button" onClick={() => setPauseModal(null)} className="btn-secondary text-xs px-4 py-2">Cancel</button>
-                    <button type="submit" className="btn-primary text-xs px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white">Confirm Pause</button>
+                    <button type="submit" className="btn-primary text-xs px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white">Confirm Pause</button>
                   </div>
                 </form>
               </div>
             </div>
           )}
 
-          {/* PRO-RATED BILLING MODAL (THE TWIST SOLUTION DISPLAY) */}
+          {/* PRO-RATED BILLING MODAL WITH DIRECT WHATSAPP LINK */}
           {billModal && (() => {
             const math = calculateProratedMath(billModal.monthly_price, '2026-09', billModal.pause_logs);
+            const rawBillText = `🍱 *TIFFINFLOW PRO-RATED BILL* 🍱\nCustomer: ${billModal.name}\nMonth: September 2026\nPlan: ${billModal.plan_name} (₹${billModal.monthly_price}/mo)\nDelivered Days: ${math.deliveredWeekdays} weekdays\nPaused Days: ${math.pausedWeekdays} days\n*Total Payable: ₹${math.finalAmount}*\nCustomer Saved: ₹${math.savings}`;
+            const whatsappLink = `https://wa.me/91${billModal.phone}?text=${encodeURIComponent(rawBillText)}`;
+
             return (
               <div className="modal-overlay">
                 <div className="glass-card max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto relative animate-fade-in">
-                  <button onClick={() => setBillModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white">✕</button>
+                  <button onClick={() => setBillModal(null)} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-primary)]">✕</button>
                   
-                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
                     <div>
-                      <h3 className="text-xl font-bold text-white">Pro-Rated Month-End Invoice</h3>
-                      <p className="text-xs text-slate-400">Customer: <strong>{billModal.name}</strong> • Plan: {billModal.plan_name}</p>
+                      <h3 className="text-xl font-bold text-[var(--text-primary)]">Pro-Rated Month-End Invoice</h3>
+                      <p className="text-xs text-[var(--text-secondary)]">Customer: <strong>{billModal.name}</strong> • Plan: {billModal.plan_name}</p>
                     </div>
-                    <span className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-400 font-mono">
+                    <span className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-[var(--color-amber)] font-mono font-bold">
                       Cycle: September 2026
                     </span>
                   </div>
 
                   {/* FORMULA BREAKDOWN BOX */}
-                  <div className="bg-slate-950/80 p-4 rounded-xl border border-amber-500/30 space-y-3">
-                    <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block">
+                  <div className="bg-[var(--bg-surface)] p-4 rounded-xl border border-amber-500/40 space-y-3 shadow-sm">
+                    <span className="text-[11px] font-bold text-[var(--color-amber)] uppercase tracking-wider block">
                       Mathematical Pro-Rating Proof
                     </span>
                     <div className="grid grid-cols-3 md:grid-cols-5 gap-2 text-center text-xs">
-                      <div className="p-2 rounded bg-white/5">
-                        <div className="text-slate-400">Monthly Plan</div>
-                        <div className="font-bold text-white text-sm">₹{billModal.monthly_price}</div>
+                      <div className="p-2 rounded bg-[var(--bg-card-hover)]">
+                        <div className="text-[var(--text-muted)]">Monthly Plan</div>
+                        <div className="font-bold text-[var(--text-primary)] text-sm">₹{billModal.monthly_price}</div>
                       </div>
-                      <div className="p-2 rounded bg-white/5">
-                        <div className="text-slate-400">Weekdays</div>
-                        <div className="font-bold text-white text-sm">{math.totalWeekdays}</div>
+                      <div className="p-2 rounded bg-[var(--bg-card-hover)]">
+                        <div className="text-[var(--text-muted)]">Weekdays</div>
+                        <div className="font-bold text-[var(--text-primary)] text-sm">{math.totalWeekdays}</div>
                       </div>
-                      <div className="p-2 rounded bg-white/5">
-                        <div className="text-slate-400">Daily Rate</div>
-                        <div className="font-bold text-amber-400 text-sm">₹{math.dailyRate}</div>
+                      <div className="p-2 rounded bg-[var(--bg-card-hover)]">
+                        <div className="text-[var(--text-muted)]">Daily Rate</div>
+                        <div className="font-bold text-[var(--color-amber)] text-sm">₹{math.dailyRate}</div>
                       </div>
                       <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/30">
-                        <div className="text-emerald-400">Delivered</div>
-                        <div className="font-bold text-emerald-300 text-sm">{math.deliveredWeekdays} days</div>
+                        <div className="text-[var(--color-emerald)] font-semibold">Delivered</div>
+                        <div className="font-bold text-[var(--color-emerald)] text-sm">{math.deliveredWeekdays} days</div>
                       </div>
                       <div className="p-2 rounded bg-rose-500/10 border border-rose-500/30">
-                        <div className="text-rose-400">Paused</div>
-                        <div className="font-bold text-rose-300 text-sm">{math.pausedWeekdays} days</div>
+                        <div className="text-[var(--color-rose)] font-semibold">Paused</div>
+                        <div className="font-bold text-[var(--color-rose)] text-sm">{math.pausedWeekdays} days</div>
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                    <div className="flex justify-between items-center pt-3 border-t border-[var(--border-color)]">
                       <div>
-                        <div className="text-xs text-slate-300">Formula: {math.deliveredWeekdays} delivered × ₹{math.dailyRate}/day</div>
+                        <div className="text-xs text-[var(--text-secondary)]">Formula: {math.deliveredWeekdays} delivered × ₹{math.dailyRate}/day</div>
                         {math.savings > 0 && (
-                          <div className="text-xs text-emerald-400 font-semibold">🎉 Customer saved ₹{math.savings} on paused days!</div>
+                          <div className="text-xs text-[var(--color-emerald)] font-bold">🎉 Customer saved ₹{math.savings} on paused days!</div>
                         )}
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] uppercase text-slate-400">Final Payable Amount</span>
-                        <div className="text-3xl font-black text-amber-400">₹{math.finalAmount}</div>
+                        <span className="text-[10px] uppercase text-[var(--text-muted)] font-bold">Final Payable Amount</span>
+                        <div className="text-3xl font-black text-[var(--color-amber)]">₹{math.finalAmount}</div>
                       </div>
                     </div>
                   </div>
 
                   {/* ITEMIZED CALENDAR DAYS */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Itemized Day-by-Day Calendar (Sept 2026)</h4>
-                    <div className="max-h-48 overflow-y-auto border border-white/10 rounded-xl">
+                    <h4 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">Itemized Day-by-Day Calendar (Sept 2026)</h4>
+                    <div className="max-h-48 overflow-y-auto border border-[var(--border-color)] rounded-xl">
                       <table className="w-full text-xs text-left">
-                        <thead className="bg-slate-900 sticky top-0 border-b border-white/10 text-slate-400">
+                        <thead className="bg-[var(--bg-surface)] sticky top-0 border-b border-[var(--border-color)] text-[var(--text-muted)]">
                           <tr>
                             <th className="p-2">Date</th>
                             <th className="p-2">Day</th>
@@ -813,18 +950,18 @@
                             <th className="p-2 text-right">Billed</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-[var(--border-color)]">
                           {math.schedule.map(d => (
                             <tr key={d.date}>
-                              <td className="p-2 text-white font-mono">{d.date}</td>
-                              <td className="p-2 text-slate-400">{d.dayName}</td>
+                              <td className="p-2 text-[var(--text-primary)] font-mono">{d.date}</td>
+                              <td className="p-2 text-[var(--text-secondary)]">{d.dayName}</td>
                               <td className="p-2">
-                                {d.status === 'DELIVERED' && <span className="text-emerald-400 font-semibold">Delivered</span>}
-                                {d.status === 'PAUSED' && <span className="text-rose-400 font-semibold">Paused</span>}
-                                {d.status === 'WEEKEND' && <span className="text-slate-500">Weekend</span>}
+                                {d.status === 'DELIVERED' && <span className="text-[var(--color-emerald)] font-semibold">Delivered</span>}
+                                {d.status === 'PAUSED' && <span className="text-[var(--color-rose)] font-semibold">Paused</span>}
+                                {d.status === 'WEEKEND' && <span className="text-[var(--text-muted)]">Weekend</span>}
                               </td>
-                              <td className="p-2 text-slate-400">{d.reason || (d.status === 'DELIVERED' ? 'Lunch Served' : '-')}</td>
-                              <td className="p-2 text-right font-bold text-slate-200">
+                              <td className="p-2 text-[var(--text-secondary)]">{d.reason || (d.status === 'DELIVERED' ? 'Lunch Served' : '-')}</td>
+                              <td className="p-2 text-right font-bold text-[var(--text-primary)]">
                                 {d.status === 'DELIVERED' ? `₹${math.dailyRate}` : '₹0'}
                               </td>
                             </tr>
@@ -835,18 +972,27 @@
                   </div>
 
                   {/* Actions */}
-                  <div className="flex justify-between items-center pt-2">
-                    <button 
-                      onClick={() => {
-                        const billText = `🍱 TIFFINFLOW BILL: ${billModal.name}\nMonth: September 2026\nPlan: ${billModal.plan_name}\nDelivered Days: ${math.deliveredWeekdays}\nPaused Days: ${math.pausedWeekdays}\nFinal Pro-Rated Amount: ₹${math.finalAmount}\nSavings: ₹${math.savings}`;
-                        navigator.clipboard.writeText(billText);
-                        triggerNotification('Copied WhatsApp bill summary to clipboard!');
-                      }}
-                      className="btn-secondary text-xs px-3.5 py-2 flex items-center gap-1.5"
-                    >
-                      📲 Copy WhatsApp Bill
-                    </button>
-                    <button onClick={() => setBillModal(null)} className="btn-primary text-xs px-5 py-2">
+                  <div className="flex justify-between items-center pt-2 flex-wrap gap-2">
+                    <div className="flex gap-2">
+                      <a 
+                        href={whatsappLink} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="btn-primary text-xs px-3.5 py-2 flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        📲 Send on WhatsApp
+                      </a>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(rawBillText);
+                          triggerNotification('Copied bill summary to clipboard!');
+                        }}
+                        className="btn-secondary text-xs px-3.5 py-2"
+                      >
+                        📋 Copy Text
+                      </button>
+                    </div>
+                    <button onClick={() => setBillModal(null)} className="btn-secondary text-xs px-5 py-2">
                       Close
                     </button>
                   </div>
@@ -859,8 +1005,8 @@
           {newSubModal && (
             <div className="modal-overlay">
               <div className="glass-card max-w-md w-full p-6 space-y-4 relative animate-fade-in">
-                <button onClick={() => setNewSubModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">✕</button>
-                <h3 className="text-xl font-bold text-white">Add New Subscriber</h3>
+                <button onClick={() => setNewSubModal(false)} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-primary)]">✕</button>
+                <h3 className="text-xl font-bold text-[var(--text-primary)]">Add New Subscriber</h3>
 
                 <form onSubmit={(e) => {
                   e.preventDefault();
@@ -870,6 +1016,7 @@
                     subscription_id: Date.now(),
                     name: form.fullName.value,
                     phone: form.phone.value,
+                    locality: form.locality.value,
                     address: form.address.value,
                     dietary_notes: form.notes.value,
                     plan_id: 1,
@@ -881,19 +1028,25 @@
                   });
                 }} className="space-y-3">
                   <div>
-                    <label className="text-xs text-slate-400 block mb-1">Full Name</label>
+                    <label className="text-xs text-[var(--text-muted)] block mb-1">Full Name</label>
                     <input name="fullName" required placeholder="e.g. Yash Sharma" className="input-control w-full text-xs" />
                   </div>
-                  <div>
-                    <label className="text-xs text-slate-400 block mb-1">Phone Number</label>
-                    <input name="phone" required placeholder="e.g. 9829911223" className="input-control w-full text-xs" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-[var(--text-muted)] block mb-1">Phone Number</label>
+                      <input name="phone" required placeholder="e.g. 9829911223" className="input-control w-full text-xs" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-[var(--text-muted)] block mb-1">Locality / Area</label>
+                      <input name="locality" required placeholder="e.g. Malviya Nagar" className="input-control w-full text-xs" />
+                    </div>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 block mb-1">Delivery Address</label>
+                    <label className="text-xs text-[var(--text-muted)] block mb-1">Delivery Address</label>
                     <input name="address" required placeholder="Flat 101, Mansarovar, Jaipur" className="input-control w-full text-xs" />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 block mb-1">Dietary Notes</label>
+                    <label className="text-xs text-[var(--text-muted)] block mb-1">Dietary Notes</label>
                     <input name="notes" placeholder="e.g. Less spicy, pure satvik" className="input-control w-full text-xs" />
                   </div>
                   <div className="flex justify-end gap-2 pt-2">
@@ -906,7 +1059,7 @@
           )}
 
           {/* FOOTER */}
-          <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-500">
+          <footer className="border-t border-[var(--border-color)] py-6 text-center text-xs text-[var(--text-muted)]">
             🍱 TiffinFlow — Builder Round Evaluation • Fair Pro-Rated Weekday Billing Engine
           </footer>
 

@@ -1,10 +1,12 @@
 /* ==========================================================================
    TiffinFlow Design System & Modular Stylesheet (style.css)
-   Clean Separation of Styles: Zero Inline CSS, Modular & Scalable
+   Aesthetic: Minimalist, Cohesive, Luxury B2B SaaS (Linear / Stripe inspired)
+   Unified Palette: Consistent Brand Amber + Clean Neutrals + Semantic Status
+   Zero Inline CSS across all pages, dynamic Light & Dark mode support
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. Dynamic Theme Tokens (Light & Dark Modes)
+   1. Dynamic Theme Tokens (Curated, Limited Palette)
    -------------------------------------------------------------------------- */
 html[data-theme="light"] {
   --bg-primary: #f8fafc;
@@ -12,47 +14,75 @@ html[data-theme="light"] {
   --bg-card: #ffffff;
   --bg-card-hover: #f1f5f9;
   --border-color: #e2e8f0;
+  --border-hover: #cbd5e1;
   --border-focus: #d97706;
-  --color-amber: #d97706;
-  --color-amber-light: #f59e0b;
-  --color-amber-glow: rgba(217, 119, 6, 0.12);
-  --color-emerald: #059669;
-  --color-emerald-glow: rgba(5, 150, 105, 0.12);
-  --color-rose: #e11d48;
-  --color-rose-glow: rgba(225, 29, 72, 0.12);
-  --color-blue: #2563eb;
-  --color-blue-glow: rgba(37, 99, 235, 0.12);
+
+  /* Primary Brand Color: Warm Culinary Amber */
+  --color-brand: #d97706;
+  --color-brand-light: #f59e0b;
+  --color-brand-glow: rgba(217, 119, 6, 0.10);
+
+  /* Semantic Status Colors (Only used for Active / Paused states) */
+  --color-active: #059669;
+  --color-active-glow: rgba(5, 150, 105, 0.10);
+  --color-active-border: rgba(5, 150, 105, 0.25);
+
+  --color-paused: #e11d48;
+  --color-paused-glow: rgba(225, 29, 72, 0.08);
+  --color-paused-border: rgba(225, 29, 72, 0.25);
+
+  /* Typography */
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
-  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.03);
+  --shadow-modal: 0 24px 48px -12px rgba(15, 23, 42, 0.18);
 }
 
 html[data-theme="dark"] {
-  --bg-primary: #0b1120;
-  --bg-surface: #131d33;
-  --bg-card: rgba(23, 37, 66, 0.75);
-  --bg-card-hover: rgba(30, 48, 86, 0.85);
+  --bg-primary: #090d16;
+  --bg-surface: #0f172a;
+  --bg-card: #131d33;
+  --bg-card-hover: #1e293b;
   --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.16);
   --border-focus: #f59e0b;
-  --color-amber: #f59e0b;
-  --color-amber-light: #fbbf24;
-  --color-amber-glow: rgba(245, 158, 11, 0.18);
-  --color-emerald: #10b981;
-  --color-emerald-glow: rgba(16, 185, 129, 0.18);
-  --color-rose: #f43f5e;
-  --color-rose-glow: rgba(244, 63, 94, 0.18);
-  --color-blue: #3b82f6;
-  --color-blue-glow: rgba(59, 130, 246, 0.18);
+
+  /* Primary Brand Color: Radiant Amber */
+  --color-brand: #f59e0b;
+  --color-brand-light: #fbbf24;
+  --color-brand-glow: rgba(245, 158, 11, 0.15);
+
+  /* Semantic Status Colors */
+  --color-active: #10b981;
+  --color-active-glow: rgba(16, 185, 129, 0.14);
+  --color-active-border: rgba(16, 185, 129, 0.28);
+
+  --color-paused: #f43f5e;
+  --color-paused-glow: rgba(244, 63, 94, 0.12);
+  --color-paused-border: rgba(244, 63, 94, 0.28);
+
+  /* Typography */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-modal: 0 30px 60px rgba(0, 0, 0, 0.6);
 }
 
 /* --------------------------------------------------------------------------
-   2. Typography & Global Layout
+   2. Typography & Base Layout
    -------------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+}
+
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -60,12 +90,14 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  transition: background-color 0.25s ease, color 0.25s ease;
+  line-height: 1.5;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Outfit', sans-serif;
   letter-spacing: -0.015em;
+  color: var(--text-primary);
 }
 
 .font-mono {
@@ -73,21 +105,34 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* --------------------------------------------------------------------------
-   3. Glassmorphism & Cards
+   3. Unified Card Component System (No rainbow borders)
    -------------------------------------------------------------------------- */
 .glass-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow: var(--shadow-card);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 .glass-card:hover {
+  border-color: var(--border-hover);
+}
+
+/* Metric KPI card */
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease;
+}
+.kpi-card:hover {
   border-color: var(--border-focus);
 }
 
 /* --------------------------------------------------------------------------
-   4. Button Component System (No wrapping, responsive micro-interactions)
+   4. Unified Button System
    -------------------------------------------------------------------------- */
 .btn-primary {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
@@ -95,8 +140,8 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   padding: 8px 16px;
   border-radius: 8px;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -104,87 +149,87 @@ h1, h2, h3, h4, h5, h6 {
   border: none;
   text-decoration: none;
   white-space: nowrap;
+  font-size: 0.8125rem;
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.45);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
 }
 
 .btn-secondary {
-  background: var(--bg-card-hover);
+  background: var(--bg-surface);
   color: var(--text-primary);
   font-weight: 600;
   padding: 8px 14px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
+  font-size: 0.8125rem;
 }
 .btn-secondary:hover {
-  border-color: var(--border-focus);
-}
-
-.btn-accent {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #ffffff;
-  font-weight: 700;
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: none;
-  white-space: nowrap;
-}
-.btn-accent:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
 }
 
 /* --------------------------------------------------------------------------
-   5. Status Badges & Pills
+   5. Unified Status Badges & Pills
    -------------------------------------------------------------------------- */
-.badge-active {
-  background: var(--color-emerald-glow);
-  color: var(--color-emerald);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-.badge-paused {
-  background: var(--color-rose-glow);
-  color: var(--color-rose);
-  border: 1px solid rgba(244, 63, 94, 0.3);
-}
-.badge-transferred {
-  background: var(--color-blue-glow);
-  color: var(--color-blue);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+.badge-brand {
+  background: var(--color-brand-glow);
+  color: var(--color-brand);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* Report Stat Cards for Messy Data Importer (T4) */
-.stat-card-imported {
-  background: var(--color-emerald-glow);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  border-radius: 12px;
-  padding: 16px;
+.badge-active {
+  background: var(--color-active-glow);
+  color: var(--color-active);
+  border: 1px solid var(--color-active-border);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
-.stat-card-deduped {
-  background: var(--color-amber-glow);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: 12px;
-  padding: 16px;
+
+.badge-paused {
+  background: var(--color-paused-glow);
+  color: var(--color-paused);
+  border: 1px solid var(--color-paused-border);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
-.stat-card-rejected {
-  background: var(--color-rose-glow);
-  border: 1px solid rgba(244, 63, 94, 0.35);
-  border-radius: 12px;
-  padding: 16px;
+
+.badge-neutral {
+  background: var(--bg-card-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  font-weight: 600;
+  font-size: 0.6875rem;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* --------------------------------------------------------------------------
@@ -197,22 +242,22 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
   padding: 8px 12px;
   outline: none;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
   font-size: 0.8125rem;
 }
 .input-control:focus {
-  border-color: var(--color-amber);
-  box-shadow: 0 0 0 3px var(--color-amber-glow);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--color-brand-glow);
 }
 
 /* --------------------------------------------------------------------------
-   7. Modal Overlay & Dialog Containers
+   7. Modals & Dialog System
    -------------------------------------------------------------------------- */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -221,27 +266,52 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .modal-container {
-  background: var(--bg-card);
+  background: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  box-shadow: var(--shadow-modal);
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
+  width: 100%;
 }
 
 /* --------------------------------------------------------------------------
-   8. Level 1 (T1) Outbox Notification Feed Styling
+   8. KDS TV Wallboard (Now Supports BOTH Light and Dark Themes dynamically!)
+   -------------------------------------------------------------------------- */
+.kds-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.kds-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease;
+}
+.kds-card:hover {
+  border-color: var(--border-hover);
+}
+
+/* --------------------------------------------------------------------------
+   9. Outbox Notification Cards (Level 1 — T1)
    -------------------------------------------------------------------------- */
 .outbox-card {
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--bg-surface);
-  padding: 14px;
-  transition: all 0.15s ease;
+  padding: 12px 14px;
+  transition: border-color 0.15s ease;
 }
 .outbox-card:hover {
-  border-color: var(--color-amber);
+  border-color: var(--border-hover);
 }
 
 .outbox-message-bubble {
@@ -250,24 +320,8 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 8px;
   padding: 10px;
   font-size: 0.75rem;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--text-secondary);
-}
-
-/* --------------------------------------------------------------------------
-   9. Level 2 (T6) Split Billing Breakdown Side-by-Side Cards
-   -------------------------------------------------------------------------- */
-.split-card-a {
-  background: rgba(217, 119, 6, 0.06);
-  border: 1px solid rgba(217, 119, 6, 0.3);
-  border-radius: 14px;
-  padding: 16px;
-}
-.split-card-b {
-  background: rgba(16, 185, 129, 0.06);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 14px;
-  padding: 16px;
 }
 
 /* --------------------------------------------------------------------------
@@ -282,47 +336,57 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* --------------------------------------------------------------------------
-   11. KDS TV High Contrast Styles
-   -------------------------------------------------------------------------- */
-.kds-tv {
-  background: #020617;
-  color: #f8fafc;
-}
-.kds-card {
-  background: #0f172a;
-  border: 1px solid #1e293b;
-}
-
-/* --------------------------------------------------------------------------
-   12. WhatsApp Chat Bubbles
+   11. WhatsApp Chat Bubbles
    -------------------------------------------------------------------------- */
 .chat-bubble-user {
   background: #d9fdd3;
   color: #111b21;
   border-radius: 12px 12px 2px 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 .chat-bubble-bot {
   background: #ffffff;
   color: #111b21;
   border-radius: 12px 12px 12px 2px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 [data-theme="dark"] .chat-bubble-user {
   background: #005c4b;
   color: #e9edef;
 }
 [data-theme="dark"] .chat-bubble-bot {
-  background: #202c33;
+  background: #1e293b;
   color: #e9edef;
 }
 
 /* --------------------------------------------------------------------------
-   13. Responsive Utilities
+   12. Report Cards for Messy Data Importer (Level 3 — T4)
    -------------------------------------------------------------------------- */
-@media (max-width: 640px) {
-  .btn-primary, .btn-secondary {
-    padding: 6px 12px;
-    font-size: 0.75rem;
-  }
+.stat-box-imported {
+  background: var(--color-active-glow);
+  border: 1px solid var(--color-active-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.stat-box-deduped {
+  background: var(--color-brand-glow);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  border-radius: 10px;
+  padding: 14px;
+}
+.stat-box-rejected {
+  background: var(--color-paused-glow);
+  border: 1px solid var(--color-paused-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+/* --------------------------------------------------------------------------
+   13. Split Billing Comparison Cards (Level 2 — T6)
+   -------------------------------------------------------------------------- */
+.split-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
 }

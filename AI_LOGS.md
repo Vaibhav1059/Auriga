@@ -262,3 +262,37 @@ add also i want to say no inline css or etc on a new page style.css which mange 
    - Created `tests/twists.test.js` with idempotent test cases for T1, T6, and T4.
    - Executed `npm test` verifying all 8 baseline billing tests and all 3 twists tests pass with 100% precision.
 
+---
+
+## Turn 11: Cohesive Limited Palette & Dynamic Multi-Theme KDS Wallboard
+
+### User Request:
+```
+the feature of kds tv wallboard u have add only dark theme for rest of the pages also u have added multiple colours every where make them proffestional looing add limited collours but also same to all pages
+```
+
+### Root Cause & Diagnosis:
+1. Previously, KDS TV Wallboard was hardcoded to `#020617` (permanently dark), while other tabs had mixed/light styles with an overabundance of scattered colors (yellow, blue, green, purple, red) across various buttons, borders, and cards.
+2. The user requested a sleek, professional B2B SaaS appearance (Linear/Stripe standard) with a strictly limited, consistent palette shared identically across all views, and consistent dark/light theme support across all pages including KDS TV Wallboard.
+
+### AI Execution:
+1. **Curated, Professional Design System (`style.css`)**:
+   - Established a strictly limited, high-end 4-role palette:
+     - **Primary Brand Amber**: (`#f59e0b` / `#d97706`) for brand identity, primary CTA buttons (`.btn-primary`), and active tab indicators.
+     - **Slate Neutrals**: (`--bg-primary`, `--bg-surface`, `--bg-card`, `--bg-card-hover`, `--border-color`, `--border-hover`, `--text-primary`, `--text-secondary`, `--text-muted`) for clean, uncluttered structure.
+     - **Semantic Active Emerald**: (`#10b981` / `#059669`) strictly reserved for active subscriptions, delivered drops, and active counts.
+     - **Semantic Paused Rose**: (`#f43f5e` / `#e11d48`) strictly reserved for vacation pause, cutoff alerts, and allergy warnings.
+   - Eliminated rainbow borders (`border-amber-500`, `border-blue-500`, `border-emerald-500`, etc.) in favor of uniform `.glass-card`, `.kpi-card`, `.badge-brand`, `.badge-active`, `.badge-paused`, and `.badge-neutral`.
+2. **Multi-Theme Dynamic KDS Wallboard (`style.css` & `app.js`)**:
+   - Replaced fixed dark `.kds-tv` class with dynamic CSS variable tokens (`.kds-container`, `.kds-card`).
+   - KDS now seamlessly renders with high-contrast clarity in both **Dark Mode** (sleek midnight slate) and **Light Mode** (crisp high-contrast dashboard).
+3. **Application-Wide Consistency (`app.js` & `preview.html`)**:
+   - Defaulted app theme to `dark` mode in both `preview.html` (`data-theme="dark"`) and `app.js` (`useState('dark')`), while preserving instantaneous 1-click toggle to `light` mode.
+   - Unified all 7 navigation views (Overview, Subscriptions & Billing, Kitchen Dispatch, KDS TV Wallboard, Driver Routes, WhatsApp Bot, Enterprise Audit Trail).
+   - Unified all modals (T1 Morning Outbox, T6 Mid-Cycle Transfer, T4 Messy Importer, Vacation Pause, Tax Invoice Bill, Add Subscriber) with consistent `.split-box`, `.stat-box-imported`, `.stat-box-deduped`, and `.stat-box-rejected` styles.
+   - Enforced **0 inline CSS** rules across all components.
+4. **Automated Verification & Audits**:
+   - `npm test`: All 8 billing tests and 3 twists tests pass with 100% precision.
+   - `node tests/audit.js`: All 11 system and UX test checks pass (HTTP 200, API health, T1, T6, T4, KDS stream, Driver route, WhatsApp webhook).
+
+

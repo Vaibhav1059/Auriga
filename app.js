@@ -1,7 +1,9 @@
 /**
  * TiffinFlow — Enterprise Pro-Rated Tiffin Subscription & KDS Platform
  * Core Application Logic & React 18 Components (app.js)
- * Clean Separation: Modular JavaScript, zero embedded code in HTML
+ * Architecture: Clean Separation, Modular JavaScript, Unified B2B Design System
+ * Palette: Curated, Professional Brand Amber + Neutrals + Semantic Active/Paused
+ * Multi-Theme: All views (including KDS TV Wallboard) dynamically adapt to Light & Dark
  */
 
 const { useState, useEffect } = React;
@@ -130,7 +132,7 @@ function calculateSplitMath(monthlyPrice, monthStr, transferDate, pauseLogsA = [
 
 // Main React App Component
 function App() {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState('dark');
   const [activeTab, setActiveTab] = useState('dashboard'); // 'landing', 'dashboard', 'dispatch', 'kds', 'driver', 'whatsapp', 'audit'
   const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
   const [auditLogs, setAuditLogs] = useState(INITIAL_AUDIT_LOGS);
@@ -367,7 +369,6 @@ function App() {
         triggerNotification(`⏰ Clock note: ${data.message || 'No notifications sent'}`);
       }
     } catch (err) {
-      // Offline fallback: simulate outbox locally
       const activeNonPaused = customers.filter(c => {
         if (c.status !== 'ACTIVE') return false;
         const isPaused = c.pause_logs.some(p => targetDate >= p.start_date && targetDate <= p.end_date);
@@ -425,7 +426,6 @@ function App() {
       console.warn('Transfer backend error, applying locally:', err);
     }
 
-    // Update locally so UI reflects transfer immediately
     setCustomers(prev => prev.map(c => {
       if (c.subscription_id === transferModal.subscription_id) {
         return {
@@ -470,7 +470,6 @@ function App() {
       try {
         parsedPayload = JSON.parse(importDataText);
       } catch (e) {
-        // Fallback: send as raw text
         parsedPayload = importDataText;
       }
 
@@ -483,7 +482,6 @@ function App() {
       setImportReport(data);
 
       if (data.imported > 0 && Array.isArray(data.details?.imported)) {
-        // Add valid imported records to state
         const newSubs = data.details.imported.map((item, idx) => ({
           id: Date.now() + idx,
           subscription_id: Date.now() + idx,
@@ -550,8 +548,8 @@ function App() {
     <div className="min-h-screen flex flex-col">
       {/* --------------------------------------------------------------------
           TWO-TIER PRODUCTION HEADER
-          Tier 1: Brand & Global Actions (Live API, Outbox/Clock CTA, Theme, Add Sub)
-          Tier 2: Sleek Pill Tabs Navigation (Whitespace-nowrap, no wrap)
+          Tier 1: Brand, Outbox CTA, Port 5000 indicator, Theme Toggle, Primary CTA
+          Tier 2: Sleek Sub-Navigation Pills
           -------------------------------------------------------------------- */}
       <header className="sticky top-0 z-50 bg-[var(--bg-surface)] border-b border-[var(--border-color)] shadow-sm backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
@@ -562,9 +560,9 @@ function App() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-black text-[var(--text-primary)] tracking-tight">Tiffin<span className="text-[var(--color-amber)]">Flow</span></span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full badge-active">
-                  Twists Live (T1, T6, T4)
+                <span className="text-xl font-black text-[var(--text-primary)] tracking-tight">Tiffin<span className="text-[var(--color-brand)]">Flow</span></span>
+                <span className="badge-brand">
+                  Enterprise 2.0
                 </span>
               </div>
               <p className="text-[11px] text-[var(--text-secondary)] hidden sm:block">Rajeshwar Annapurna Kitchens • GSTIN: 08AABCR1234F1Z5</p>
@@ -576,23 +574,23 @@ function App() {
             {/* Level 1 — T1 Clock / Outbox CTA Button */}
             <button
               onClick={() => { setOutboxModal(true); fetchOutbox(clockDate); }}
-              className="h-9 px-3 rounded-lg text-xs font-bold border border-amber-500/40 bg-amber-500/10 text-[var(--color-amber)] hover:bg-amber-500/20 transition flex items-center gap-1.5 shrink-0"
+              className="btn-secondary h-9 text-xs px-3 font-semibold flex items-center gap-1.5"
               title="View Delivery Notification Outbox (Graded via /outbox after POST /clock)"
             >
               <span>⏰</span>
-              <span className="hidden sm:inline">Morning Clock / Outbox</span>
+              <span className="hidden sm:inline">Morning Outbox</span>
             </button>
 
             {/* Live backend health badge */}
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-semibold text-emerald-600">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] text-[11px] font-semibold text-[var(--color-active)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--color-active)] animate-pulse"></span>
               <span className="font-mono">Port 5000</span>
             </div>
 
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="h-9 px-3 rounded-lg text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-card-hover)] text-[var(--text-primary)] hover:border-[var(--color-amber)] transition flex items-center gap-1.5"
+              className="btn-secondary h-9 px-3 text-xs font-semibold flex items-center gap-1.5"
               title="Toggle Light / Dark Mode"
             >
               <span>{theme === 'light' ? '🌙' : '☀️'}</span>
@@ -602,7 +600,7 @@ function App() {
             {/* Primary CTA: Add Subscriber */}
             <button
               onClick={() => setNewSubModal(true)}
-              className="btn-primary h-9 text-xs px-3.5 flex items-center gap-1.5 shadow-sm"
+              className="btn-primary h-9 text-xs px-3.5 flex items-center gap-1.5"
             >
               <span className="font-bold">+</span>
               <span className="font-bold whitespace-nowrap">Add Subscriber</span>
@@ -611,7 +609,7 @@ function App() {
         </div>
 
         {/* Tier 2: Sub-Navigation */}
-        <div className="border-t border-[var(--border-color)] bg-[var(--bg-card)]">
+        <div className="border-t border-[var(--border-color)] bg-[var(--bg-surface)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex items-center gap-1.5 overflow-x-auto py-2 no-scrollbar -mx-1 px-1">
               {[
@@ -630,7 +628,7 @@ function App() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`h-8 px-3.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
                       isActive 
-                        ? 'bg-amber-500/15 text-[var(--color-amber)] border border-amber-500/40 shadow-sm font-bold' 
+                        ? 'bg-[var(--color-brand-glow)] text-[var(--color-brand)] border border-[var(--border-focus)] shadow-sm font-bold' 
                         : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] border border-transparent'
                     }`}
                   >
@@ -647,7 +645,7 @@ function App() {
       {/* NOTIFICATION TOAST */}
       {notification && (
         <div className="max-w-7xl mx-auto w-full px-4 mt-4 animate-fade-in">
-          <div className="bg-[var(--color-emerald-glow)] border border-[var(--color-emerald)] text-[var(--color-emerald)] px-4 py-2.5 rounded-xl flex items-center justify-between text-sm shadow-md font-semibold">
+          <div className="bg-[var(--color-active-glow)] border border-[var(--color-active-border)] text-[var(--color-active)] px-4 py-2.5 rounded-xl flex items-center justify-between text-sm shadow-md font-semibold">
             <span>✅ {notification}</span>
             <button onClick={() => setNotification(null)} className="font-bold">✕</button>
           </div>
@@ -659,59 +657,77 @@ function App() {
         
         {/* TAB 1: ONE-PAGE LANDING PAGE */}
         {activeTab === 'landing' && (
-          <div className="space-y-12 animate-fade-in">
-            <div className="text-center py-8 space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-amber-glow)] border border-[var(--color-amber)] text-[var(--color-amber)] text-xs font-bold uppercase tracking-wider">
-                ⚡ Solves the Storyline & The 3 Official Twists (T1, T6, T4)
+          <div className="space-y-10 animate-fade-in">
+            <div className="text-center py-6 space-y-3">
+              <div className="badge-brand">
+                ⚡ Pro-Rated SaaS Platform • All 3 Twists Implemented
               </div>
-              <h1 className="text-4xl md:text-6xl font-black text-[var(--text-primary)] leading-tight">
-                Every customer billed <br/><span className="text-[var(--color-amber)]">only for the days</span> actually served.
+              <h1 className="text-4xl md:text-5xl font-black text-[var(--text-primary)] leading-tight">
+                Every customer billed <br/><span className="text-[var(--color-brand)]">only for the days</span> actually served.
               </h1>
-              <p className="text-[var(--text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+              <p className="text-[var(--text-secondary)] text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
                 The smart operating system for home-style tiffin services. Handles monthly weekday lunch delivery, 1-click vacation pause, instant phone lookup, strict 9:00 AM cutoff rules, automated GST pro-rated invoicing, mid-cycle transfers, and messy data cleansing.
               </p>
-              <div className="flex justify-center gap-4 pt-3 flex-wrap">
-                <button onClick={() => setActiveTab('dashboard')} className="btn-primary text-base px-8 py-3.5 flex items-center gap-2">
-                  Try Interactive Dashboard & Billing →
+              <div className="flex justify-center gap-3 pt-2 flex-wrap">
+                <button onClick={() => setActiveTab('dashboard')} className="btn-primary text-sm px-6 py-3 flex items-center gap-2">
+                  Launch Subscriptions & Billing →
                 </button>
-                <button onClick={() => { setOutboxModal(true); fetchOutbox(clockDate); }} className="btn-secondary text-base px-6 py-3.5">
-                  ⏰ Test Morning Clock (T1)
+                <button onClick={() => setActiveTab('kds')} className="btn-secondary text-sm px-5 py-3">
+                  Open KDS Wallboard
                 </button>
               </div>
             </div>
 
-            {/* 3 Twists Feature Showcase Grid */}
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="glass-card p-6 border-l-4 border-amber-500 space-y-2">
+            {/* 3 Twists Showcase Grid (Curated, Unified Cards) */}
+            <div className="grid md:grid-cols-3 gap-5">
+              <div className="glass-card p-6 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase font-bold text-[var(--color-amber)]">Level 1 — T1 (Integrate)</span>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-amber-500/10 text-[var(--color-amber)]">POST /clock</span>
+                  <span className="badge-brand">Level 1 — T1 (Integrate)</span>
+                  <span className="text-[11px] font-mono text-[var(--text-muted)]">POST /clock</span>
                 </div>
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">Morning Delivery Notification Outbox</h3>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Morning Notification Outbox</h3>
                 <p className="text-[var(--text-secondary)] text-xs leading-relaxed">
-                  Each morning, automatically dispatches personalized lunch delivery notifications to active weekday customers who are NOT on leave. Inspected and graded via <code>GET /outbox</code>.
+                  Each morning, automatically dispatches personalized lunch delivery notifications to active weekday customers who are NOT on leave. Inspected via <code>GET /outbox</code>.
                 </p>
               </div>
 
-              <div className="glass-card p-6 border-l-4 border-blue-500 space-y-2">
+              <div className="glass-card p-6 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase font-bold text-blue-500">Level 2 — T6 (Lifecycle)</span>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-500">POST /transfer</span>
+                  <span className="badge-brand">Level 2 — T6 (Lifecycle)</span>
+                  <span className="text-[11px] font-mono text-[var(--text-muted)]">POST /transfer</span>
                 </div>
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">Mid-Cycle Transfer & Split Billing</h3>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Mid-Cycle Transfer & Split Billing</h3>
                 <p className="text-[var(--text-secondary)] text-xs leading-relaxed">
-                  Transfers subscription to a new recipient mid-month without resetting the plan or cycle. Mathematically splits the monthly bill according to exact days served by Customer A vs Customer B.
+                  Transfers subscription to a new recipient mid-month without resetting plan or cycle. Mathematically splits the monthly bill according to exact days served by Customer A vs Customer B.
                 </p>
               </div>
 
-              <div className="glass-card p-6 border-l-4 border-emerald-500 space-y-2">
+              <div className="glass-card p-6 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase font-bold text-[var(--color-emerald)]">Level 3 — T4 (Messy Data)</span>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500">POST /import</span>
+                  <span className="badge-brand">Level 3 — T4 (Messy Data)</span>
+                  <span className="text-[11px] font-mono text-[var(--text-muted)]">POST /import</span>
                 </div>
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">Messy Data Importer & Report</h3>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Messy Data Importer & Report</h3>
                 <p className="text-[var(--text-secondary)] text-xs leading-relaxed">
                   Cleans noisy subscriber sheets with duplicate phones, mixed date formats (DD/MM/YYYY, ISO, textual dates), and corrupt rows, returning an exact <code>&#123; imported, deduped, rejected &#125;</code> report.
+                </p>
+              </div>
+            </div>
+
+            {/* Core Capabilities */}
+            <div className="grid md:grid-cols-2 gap-5">
+              <div className="glass-card p-6 space-y-2">
+                <div className="badge-neutral">Feature 01</div>
+                <h3 className="text-lg font-bold text-[var(--text-primary)]">Pro-Rated Billing with 5% GST</h3>
+                <p className="text-[var(--text-secondary)] text-xs leading-relaxed">
+                  Exact mathematical formula: <code>(Monthly Price / Total Weekdays) × Days Served</code>. Automatically calculates 2.5% CGST and 2.5% SGST under HSN/SAC 996331 outdoor catering tax regulations.
+                </p>
+              </div>
+              <div className="glass-card p-6 space-y-2">
+                <div className="badge-neutral">Feature 02</div>
+                <h3 className="text-lg font-bold text-[var(--text-primary)]">Strict 9:00 AM Morning Cutoff</h3>
+                <p className="text-[var(--text-secondary)] text-xs leading-relaxed">
+                  Prevents morning grocery waste. Pause requests submitted before 9:00 AM cancel today's meal; requests after 9:00 AM lock today's meal and take effect starting the next business day.
                 </p>
               </div>
             </div>
@@ -722,43 +738,43 @@ function App() {
         {activeTab === 'dashboard' && (
           <div className="space-y-6 animate-fade-in">
             
-            {/* 4 Summary KPI Cards */}
+            {/* 4 Summary KPI Cards (Unified, Clean Styling) */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="glass-card p-4 border-l-4 border-emerald-500">
+              <div className="kpi-card">
                 <span className="text-xs text-[var(--text-muted)] font-medium">Active Subscriptions</span>
                 <div className="text-3xl font-black text-[var(--text-primary)] mt-1">{activeCount}</div>
-                <span className="text-[11px] text-[var(--color-emerald)] font-semibold">Receiving lunch</span>
+                <span className="text-[11px] text-[var(--color-active)] font-semibold">● Active for lunch</span>
               </div>
-              <div className="glass-card p-4 border-l-4 border-amber-500">
+              <div className="kpi-card">
                 <span className="text-xs text-[var(--text-muted)] font-medium">Today's Lunch Count</span>
-                <div className="text-3xl font-black text-[var(--color-amber)] mt-1">{activeCount} <span className="text-xs text-[var(--text-muted)] font-normal">dabbas</span></div>
+                <div className="text-3xl font-black text-[var(--color-brand)] mt-1">{activeCount} <span className="text-xs text-[var(--text-muted)] font-normal">dabbas</span></div>
                 <span className="text-[11px] text-[var(--text-muted)]">Weekdays delivery</span>
               </div>
-              <div className="glass-card p-4 border-l-4 border-rose-500">
+              <div className="kpi-card">
                 <span className="text-xs text-[var(--text-muted)] font-medium">Currently Paused</span>
-                <div className="text-3xl font-black text-[var(--color-rose)] mt-1">{pausedCount}</div>
-                <span className="text-[11px] text-[var(--color-rose)] font-semibold">On vacation / festival</span>
+                <div className="text-3xl font-black text-[var(--text-primary)] mt-1">{pausedCount}</div>
+                <span className="text-[11px] text-[var(--color-paused)] font-semibold">⏸️ Vacation leave</span>
               </div>
-              <div className="glass-card p-4 border-l-4 border-blue-500">
+              <div className="kpi-card">
                 <span className="text-xs text-[var(--text-muted)] font-medium">Projected Monthly</span>
                 <div className="text-3xl font-black text-[var(--text-primary)] mt-1">₹18,300</div>
-                <span className="text-[11px] text-[var(--text-muted)]">Auto-prorated with 5% GST</span>
+                <span className="text-[11px] text-[var(--text-muted)]">Auto-prorated with GST</span>
               </div>
             </div>
 
             {/* TODAY'S SPECIAL KITCHEN MENU CARD */}
-            <div className="glass-card p-5 border border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-transparent">
+            <div className="glass-card p-5">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">🍲</span>
                   <div>
                     <h4 className="font-bold text-[var(--text-primary)] text-sm">Today's Cooking Menu (Dispatch Spec)</h4>
-                    <p className="text-xs text-[var(--text-secondary)]">Broadcasted to customers and kitchen dispatch staff</p>
+                    <p className="text-xs text-[var(--text-secondary)]">Broadcasted to kitchen staff, delivery drivers, and customers</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setEditingMenu(!editingMenu)} 
-                  className="text-xs font-bold text-[var(--color-amber)] hover:underline"
+                  className="btn-secondary text-xs px-3 py-1"
                 >
                   {editingMenu ? 'Done Editing' : '✏️ Edit Menu'}
                 </button>
@@ -819,19 +835,19 @@ function App() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                  <div className="p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                  <div className="p-2.5 rounded-lg bg-[var(--bg-card-hover)] border border-[var(--border-color)]">
                     <span className="text-[var(--text-muted)] block text-[10px] uppercase font-bold">Curry / Sabzi</span>
                     <strong className="text-[var(--text-primary)]">{todaysMenu.sabzi}</strong>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                  <div className="p-2.5 rounded-lg bg-[var(--bg-card-hover)] border border-[var(--border-color)]">
                     <span className="text-[var(--text-muted)] block text-[10px] uppercase font-bold">Lentil / Dal</span>
                     <strong className="text-[var(--text-primary)]">{todaysMenu.dal}</strong>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                  <div className="p-2.5 rounded-lg bg-[var(--bg-card-hover)] border border-[var(--border-color)]">
                     <span className="text-[var(--text-muted)] block text-[10px] uppercase font-bold">Breads & Rice</span>
                     <strong className="text-[var(--text-primary)]">{todaysMenu.breads}, {todaysMenu.rice}</strong>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                  <div className="p-2.5 rounded-lg bg-[var(--bg-card-hover)] border border-[var(--border-color)]">
                     <span className="text-[var(--text-muted)] block text-[10px] uppercase font-bold">Accompaniments</span>
                     <strong className="text-[var(--text-primary)]">{todaysMenu.extras}</strong>
                   </div>
@@ -840,20 +856,20 @@ function App() {
             </div>
 
             {/* INSTANT PHONE SEARCH CARD */}
-            <div className="glass-card p-6 border border-amber-500/30">
+            <div className="glass-card p-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                     📞 Instant Phone Number Lookup
                   </h3>
-                  <p className="text-xs text-[var(--text-secondary)]">Search customer by phone to view current status, pause logs, and live tax bill</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Search subscriber by phone to view current delivery status, pause logs, and pro-rated tax bill</p>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="text-[var(--text-muted)]">Try demo:</span>
-                  <button onClick={() => handlePhoneSearch('9829012345')} className="px-2.5 py-1 rounded bg-[var(--bg-surface)] text-[var(--color-amber)] border border-[var(--border-color)] font-bold">
+                  <span className="text-[var(--text-muted)]">Demo shortcuts:</span>
+                  <button onClick={() => handlePhoneSearch('9829012345')} className="btn-secondary text-xs px-2.5 py-1">
                     Amit (Active)
                   </button>
-                  <button onClick={() => handlePhoneSearch('9829054321')} className="px-2.5 py-1 rounded bg-[var(--bg-surface)] text-[var(--color-rose)] border border-[var(--border-color)] font-bold">
+                  <button onClick={() => handlePhoneSearch('9829054321')} className="btn-secondary text-xs px-2.5 py-1 text-[var(--color-paused)]">
                     Pooja (Paused)
                   </button>
                 </div>
@@ -863,7 +879,7 @@ function App() {
                 <input
                   type="text"
                   className="input-control w-full text-base font-mono pl-11"
-                  placeholder="Type phone number digits (e.g. 9829012345)..."
+                  placeholder="Type phone digits (e.g. 9829012345)..."
                   value={phoneQuery}
                   onChange={(e) => handlePhoneSearch(e.target.value)}
                 />
@@ -871,39 +887,39 @@ function App() {
               </div>
 
               {matchedCustomer && (
-                <div className="mt-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in shadow-md">
+                <div className="mt-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in shadow-sm">
                   <div>
                     <div className="flex items-center gap-3">
-                      <h4 className="text-lg font-bold text-[var(--text-primary)]">{matchedCustomer.name}</h4>
-                      <span className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full ${matchedCustomer.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>
-                        {matchedCustomer.status === 'ACTIVE' ? '● Active for Lunch' : '⏸️ Currently Paused'}
+                      <h4 className="text-base font-bold text-[var(--text-primary)]">{matchedCustomer.name}</h4>
+                      <span className={matchedCustomer.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}>
+                        {matchedCustomer.status === 'ACTIVE' ? '● Active' : '⏸️ Paused'}
                       </span>
                     </div>
                     <p className="text-xs text-[var(--text-secondary)] mt-1">📞 {matchedCustomer.phone} • 📍 {matchedCustomer.address} ({matchedCustomer.locality})</p>
-                    <p className="text-xs text-[var(--color-amber)] font-semibold mt-0.5">🍱 Plan: {matchedCustomer.plan_name} (₹{matchedCustomer.monthly_price}/mo) • <em>{matchedCustomer.dietary_notes}</em></p>
+                    <p className="text-xs text-[var(--color-brand)] font-semibold mt-0.5">🍱 {matchedCustomer.plan_name} (₹{matchedCustomer.monthly_price}/mo) • <em>{matchedCustomer.dietary_notes}</em></p>
                     
                     {matchedCustomer.pause_logs.length > 0 && (
-                      <div className="mt-2 text-xs text-[var(--color-rose)] font-medium">
+                      <div className="mt-2 text-xs text-[var(--color-paused)] font-medium">
                         <strong>Recorded Pauses:</strong> {matchedCustomer.pause_logs.map(p => `${p.start_date} to ${p.end_date} (${p.reason})`).join(', ')}
                       </div>
                     )}
                   </div>
 
                   <div className="flex gap-2 shrink-0 flex-wrap">
-                    <button onClick={() => setTransferModal(matchedCustomer)} className="btn-secondary text-xs px-3 py-2 text-blue-600 font-bold border-blue-500/40">
+                    <button onClick={() => setTransferModal(matchedCustomer)} className="btn-secondary text-xs px-3 py-2">
                       🔄 Transfer (T6)
                     </button>
                     {matchedCustomer.status === 'PAUSED' ? (
-                      <button onClick={() => handleResume(matchedCustomer.subscription_id)} className="btn-secondary text-xs px-3 py-2 text-emerald-600 font-bold border-emerald-500/40">
+                      <button onClick={() => handleResume(matchedCustomer.subscription_id)} className="btn-secondary text-xs px-3 py-2 text-[var(--color-active)]">
                         ▶ Resume
                       </button>
                     ) : (
-                      <button onClick={() => setPauseModal(matchedCustomer)} className="btn-secondary text-xs px-3 py-2 text-rose-600 font-bold border-rose-500/40">
-                        ⏸️ Set Pause
+                      <button onClick={() => setPauseModal(matchedCustomer)} className="btn-secondary text-xs px-3 py-2 text-[var(--color-paused)]">
+                        ⏸️ Pause
                       </button>
                     )}
                     <button onClick={() => setBillModal(matchedCustomer)} className="btn-primary text-xs px-4 py-2">
-                      🧮 Compute Tax Bill
+                      🧮 Compute Bill
                     </button>
                   </div>
                 </div>
@@ -914,13 +930,13 @@ function App() {
             <div className="glass-card p-6 space-y-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <h3 className="text-lg font-bold text-[var(--text-primary)]">All Subscribers & Monthly Plans</h3>
+                  <h3 className="text-lg font-bold text-[var(--text-primary)]">All Subscribers & Monthly Subscriptions</h3>
                   <button
                     onClick={() => { setImportModal(true); handleLoadMessyPreset(); }}
-                    className="btn-secondary text-xs px-3 py-1 text-emerald-600 border-emerald-500/40 hover:bg-emerald-500/10 font-bold flex items-center gap-1.5"
+                    className="btn-secondary text-xs px-3 py-1 font-semibold flex items-center gap-1.5"
                   >
                     <span>📥</span>
-                    <span>Bulk Import Messy List (T4)</span>
+                    <span>Bulk Import (T4)</span>
                   </button>
                 </div>
                 
@@ -958,10 +974,10 @@ function App() {
                     <tr className="border-b border-[var(--border-color)] text-[var(--text-muted)] text-xs">
                       <th className="pb-3 font-semibold">Subscriber</th>
                       <th className="pb-3 font-semibold">Phone</th>
-                      <th className="pb-3 font-semibold">Area / Locality</th>
-                      <th className="pb-3 font-semibold">Plan & Meal Type</th>
+                      <th className="pb-3 font-semibold">Area</th>
+                      <th className="pb-3 font-semibold">Plan & Meal</th>
                       <th className="pb-3 font-semibold">Status</th>
-                      <th className="pb-3 font-semibold text-right">Actions & Billing</th>
+                      <th className="pb-3 font-semibold text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-color)]">
@@ -970,20 +986,20 @@ function App() {
                         <td className="py-3">
                           <div className="font-bold text-[var(--text-primary)]">{c.name}</div>
                           <div className="text-xs text-[var(--text-muted)]">{c.address}</div>
-                          {c.dietary_notes && <div className="text-[11px] text-[var(--color-amber)] font-medium">🥗 {c.dietary_notes}</div>}
+                          {c.dietary_notes && <div className="text-[11px] text-[var(--color-brand)] font-medium">🥗 {c.dietary_notes}</div>}
                         </td>
                         <td className="py-3 font-mono text-[var(--text-secondary)] text-xs">{c.phone}</td>
                         <td className="py-3">
-                          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                          <span className="badge-neutral">
                             📍 {c.locality || 'Jaipur'}
                           </span>
                         </td>
                         <td className="py-3">
                           <div className="text-[var(--text-primary)] font-medium">{c.plan_name}</div>
-                          <div className="text-xs text-[var(--color-amber)] font-bold">₹{c.monthly_price}/mo ({c.meal_type})</div>
+                          <div className="text-xs text-[var(--color-brand)] font-semibold">₹{c.monthly_price}/mo ({c.meal_type})</div>
                         </td>
                         <td className="py-3">
-                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${c.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}`}>
+                          <span className={c.status === 'ACTIVE' ? 'badge-active' : 'badge-paused'}>
                             {c.status}
                           </span>
                         </td>
@@ -991,21 +1007,21 @@ function App() {
                           <div className="inline-flex gap-1.5 flex-wrap justify-end">
                             <button
                               onClick={() => setTransferModal(c)}
-                              className="px-2 py-1.5 rounded-lg text-xs bg-blue-500/10 text-blue-600 font-bold border border-blue-500/30 hover:bg-blue-500/20"
+                              className="btn-secondary text-xs px-2.5 py-1"
                               title="Transfer subscription mid-cycle (Level 2 Twist T6)"
                             >
                               🔄 Transfer
                             </button>
                             {c.status === 'PAUSED' ? (
-                              <button onClick={() => handleResume(c.subscription_id)} className="px-2.5 py-1.5 rounded-lg text-xs bg-emerald-500/10 text-emerald-600 font-bold border border-emerald-500/30 hover:bg-emerald-500/20">
+                              <button onClick={() => handleResume(c.subscription_id)} className="btn-secondary text-xs px-2.5 py-1 text-[var(--color-active)]">
                                 ▶ Resume
                               </button>
                             ) : (
-                              <button onClick={() => setPauseModal(c)} className="px-2.5 py-1.5 rounded-lg text-xs bg-rose-500/10 text-rose-600 font-bold border border-rose-500/30 hover:bg-rose-500/20">
+                              <button onClick={() => setPauseModal(c)} className="btn-secondary text-xs px-2.5 py-1 text-[var(--color-paused)]">
                                 ⏸️ Pause
                               </button>
                             )}
-                            <button onClick={() => setBillModal(c)} className="btn-primary text-xs px-3 py-1.5">
+                            <button onClick={() => setBillModal(c)} className="btn-primary text-xs px-3 py-1">
                               🧮 Bill
                             </button>
                           </div>
@@ -1049,60 +1065,59 @@ function App() {
                 <h2 className="text-2xl font-bold text-[var(--text-primary)]">👨‍🍳 Morning Kitchen Dispatch Board</h2>
                 <p className="text-sm text-[var(--text-secondary)]">Pre-sorts active lunch dabbas to cook vs paused subscribers on leave today</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <button
                   onClick={() => { setOutboxModal(true); fetchOutbox(clockDate); }}
-                  className="btn-secondary text-xs px-3 py-2 text-[var(--color-amber)] font-bold border-amber-500/30 flex items-center gap-1.5"
+                  className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5"
                 >
                   <span>⏰</span>
-                  <span>Advance Clock / View Outbox (T1)</span>
+                  <span>Advance Clock / Outbox (T1)</span>
                 </button>
-                <div className="bg-[var(--bg-surface)] px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs text-[var(--text-secondary)] shadow-sm flex items-center gap-2">
-                  <span>🔒 9:00 AM Cutoff Status:</span>
-                  <strong className="text-emerald-500 font-bold">LOCKED FOR DISPATCH</strong>
+                <div className="badge-active py-1.5 px-3">
+                  <span>🔒 9:00 AM Locked for Dispatch</span>
                 </div>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-5">
               {/* Active List */}
-              <div className="glass-card p-6 border-t-4 border-emerald-500 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-[var(--color-emerald)]">✅ Cook & Pack ({activeCount} Dabbas)</h3>
-                  <span className="text-xs px-2 py-0.5 rounded badge-active">Active Today</span>
+              <div className="glass-card p-5 space-y-3">
+                <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2.5">
+                  <h3 className="text-base font-bold text-[var(--text-primary)]">✅ Cook & Pack ({activeCount} Dabbas)</h3>
+                  <span className="badge-active">Active Today</span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {activeList.map(c => (
-                    <div key={c.id} className="p-3.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-1 shadow-sm">
+                    <div key={c.id} className="p-3 rounded-xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] space-y-1">
                       <div className="flex justify-between items-center">
                         <h4 className="font-bold text-[var(--text-primary)] text-sm">{c.name}</h4>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/15 text-[var(--color-amber)]">{c.meal_type}</span>
+                        <span className="badge-brand">{c.meal_type}</span>
                       </div>
                       <p className="text-xs text-[var(--text-secondary)]">📞 {c.phone} • 📍 {c.address}</p>
-                      {c.dietary_notes && <p className="text-xs text-[var(--color-amber)] font-medium">⚠️ {c.dietary_notes}</p>}
+                      {c.dietary_notes && <p className="text-xs text-[var(--color-brand)] font-medium">⚠️ {c.dietary_notes}</p>}
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Paused List */}
-              <div className="glass-card p-6 border-t-4 border-rose-500 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-[var(--color-rose)]">🚫 Do Not Cook - Paused ({pausedCount})</h3>
-                  <span className="text-xs px-2 py-0.5 rounded badge-paused">Zero Billing Today</span>
+              <div className="glass-card p-5 space-y-3">
+                <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2.5">
+                  <h3 className="text-base font-bold text-[var(--text-primary)]">🚫 Paused on Leave ({pausedCount})</h3>
+                  <span className="badge-paused">Zero Billing Today</span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {pausedList.map(c => (
-                    <div key={c.id} className="p-3.5 rounded-xl bg-[var(--bg-surface)] border border-rose-500/30 space-y-1 shadow-sm">
+                    <div key={c.id} className="p-3 rounded-xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] space-y-1">
                       <div className="flex justify-between items-center">
                         <h4 className="font-bold text-[var(--text-primary)] text-sm">{c.name}</h4>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded badge-paused">On Leave</span>
+                        <span className="badge-paused">On Leave</span>
                       </div>
                       <p className="text-xs text-[var(--text-secondary)]">📞 {c.phone}</p>
-                      <p className="text-xs text-[var(--color-rose)] font-semibold">
-                        🏖️ <strong>Reason:</strong> {c.pause_logs[0]?.reason || 'Customer requested pause'}
+                      <p className="text-xs text-[var(--color-paused)] font-medium">
+                        🏖️ <strong>Reason:</strong> {c.pause_logs[0]?.reason || 'Customer requested leave'}
                       </p>
                     </div>
                   ))}
@@ -1112,101 +1127,102 @@ function App() {
           </div>
         )}
 
-        {/* TAB 4: KDS TV SCREEN MODE */}
+        {/* TAB 4: KDS TV WALLBOARD (NOW MULTI-THEME SUPPORTED!) */}
         {activeTab === 'kds' && (
-          <div className="space-y-6 animate-fade-in p-4 rounded-2xl kds-tv">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div className="kds-container space-y-6 animate-fade-in">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
               <div>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">📺</span>
-                  <h2 className="text-3xl font-black text-amber-400 tracking-tight">KITCHEN DISPLAY SYSTEM (KDS TV)</h2>
-                  <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                  <h2 className="text-2xl md:text-3xl font-black text-[var(--text-primary)] tracking-tight">KITCHEN DISPLAY SYSTEM (KDS)</h2>
+                  <span className="badge-paused">
+                    <span className="w-2 h-2 rounded-full bg-[var(--color-paused)] animate-ping"></span>
                     9:00 AM CUTOFF LOCKED
                   </span>
                 </div>
-                <p className="text-sm text-slate-400 mt-1">Live prep counters and packaging manifest for Head Cook Ramu Maharaj</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">Live prep counts and packing specs • Dynamically synchronized with {theme === 'light' ? 'Light' : 'Dark'} mode</p>
               </div>
-              <div className="text-right font-mono text-xs text-slate-400">
-                <div>DATE: <strong>2026-09-17</strong></div>
-                <div>SERVICE: <strong>LUNCH DISPATCH (12:30 PM)</strong></div>
+              <div className="text-right font-mono text-xs text-[var(--text-muted)]">
+                <div>DATE: <strong className="text-[var(--text-primary)]">2026-09-17</strong></div>
+                <div>SERVICE: <strong className="text-[var(--color-brand)]">LUNCH DISPATCH (12:30 PM)</strong></div>
               </div>
             </div>
 
-            {/* 4 Big Stat Cards */}
+            {/* 4 Big Stat Cards (Unified, High-Contrast Typography) */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="kds-card p-5 rounded-xl border-l-4 border-emerald-500">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">TOTAL TO COOK TODAY</span>
-                <div className="text-5xl font-black text-emerald-400 mt-2">{activeCount}</div>
-                <span className="text-xs text-slate-400">Strict active count</span>
+              <div className="kds-card">
+                <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider block">TOTAL TO COOK TODAY</span>
+                <div className="text-4xl md:text-5xl font-black text-[var(--text-primary)] mt-1">{activeCount}</div>
+                <span className="text-xs text-[var(--color-active)] font-semibold">Strict active count</span>
               </div>
-              <div className="kds-card p-5 rounded-xl border-l-4 border-rose-500">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">PAUSED / ON LEAVE</span>
-                <div className="text-5xl font-black text-rose-400 mt-2">{pausedCount}</div>
-                <span className="text-xs text-slate-400">Zero groceries prepared</span>
+              <div className="kds-card">
+                <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider block">PAUSED / ON LEAVE</span>
+                <div className="text-4xl md:text-5xl font-black text-[var(--text-primary)] mt-1">{pausedCount}</div>
+                <span className="text-xs text-[var(--color-paused)] font-semibold">Zero groceries prep</span>
               </div>
-              <div className="kds-card p-5 rounded-xl border-l-4 border-amber-500">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">STANDARD THALIS</span>
-                <div className="text-5xl font-black text-amber-400 mt-2">{tierCounts.STANDARD}</div>
-                <span className="text-xs text-slate-400">4 Phulkas + Dal + Sabzi</span>
+              <div className="kds-card">
+                <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider block">STANDARD THALIS</span>
+                <div className="text-4xl md:text-5xl font-black text-[var(--color-brand)] mt-1">{tierCounts.STANDARD}</div>
+                <span className="text-xs text-[var(--text-muted)]">4 Phulkas + Dal + Sabzi</span>
               </div>
-              <div className="kds-card p-5 rounded-xl border-l-4 border-blue-500">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">DELUXE / DIET MEALS</span>
-                <div className="text-5xl font-black text-blue-400 mt-2">{tierCounts.DELUXE}</div>
-                <span className="text-xs text-slate-400">Paneer / Protein specials</span>
+              <div className="kds-card">
+                <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider block">DELUXE / DIET MEALS</span>
+                <div className="text-4xl md:text-5xl font-black text-[var(--text-primary)] mt-1">{tierCounts.DELUXE}</div>
+                <span className="text-xs text-[var(--text-muted)]">Special preparation</span>
               </div>
             </div>
 
             {/* Meal Distribution & Allergies */}
-            <div className="grid lg:grid-cols-2 gap-6">
-              <div className="kds-card p-6 rounded-xl space-y-4">
-                <h3 className="text-lg font-bold text-amber-400 flex items-center gap-2">
+            <div className="grid lg:grid-cols-2 gap-5">
+              <div className="kds-card space-y-4">
+                <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
                   🍱 MEAL TYPE DISTRIBUTION
                 </h3>
                 <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
-                    <div className="text-xs text-slate-400 font-bold">VEG STANDARD</div>
-                    <div className="text-3xl font-black text-emerald-400 mt-1">{mealCounts.Veg || 0}</div>
+                  <div className="p-3.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                    <div className="text-xs text-[var(--text-muted)] font-bold">VEG STANDARD</div>
+                    <div className="text-2xl font-black text-[var(--text-primary)] mt-1">{mealCounts.Veg || 0}</div>
                   </div>
-                  <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
-                    <div className="text-xs text-slate-400 font-bold">JAIN SATVIK</div>
-                    <div className="text-3xl font-black text-amber-400 mt-1">{mealCounts.Jain || 0}</div>
+                  <div className="p-3.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                    <div className="text-xs text-[var(--text-muted)] font-bold">JAIN SATVIK</div>
+                    <div className="text-2xl font-black text-[var(--color-brand)] mt-1">{mealCounts.Jain || 0}</div>
                   </div>
-                  <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
-                    <div className="text-xs text-slate-400 font-bold">HIGH PROTEIN</div>
-                    <div className="text-3xl font-black text-blue-400 mt-1">{mealCounts['Diet/High-Protein'] || 0}</div>
+                  <div className="p-3.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                    <div className="text-xs text-[var(--text-muted)] font-bold">HIGH PROTEIN</div>
+                    <div className="text-2xl font-black text-[var(--text-primary)] mt-1">{mealCounts['Diet/High-Protein'] || 0}</div>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg bg-slate-900 border border-slate-800 space-y-2 text-xs">
-                  <div className="text-amber-400 font-bold uppercase tracking-wider">Kitchen Packing Checklist:</div>
-                  <div className="flex justify-between text-slate-300">
+                <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-1.5 text-xs">
+                  <div className="text-[var(--color-brand)] font-bold uppercase tracking-wider">Kitchen Packing Checklist:</div>
+                  <div className="flex justify-between text-[var(--text-secondary)]">
                     <span>Total Phulkas to puff:</span>
-                    <strong className="font-mono text-emerald-400">{activeCount * 4} rotis</strong>
+                    <strong className="font-mono text-[var(--text-primary)]">{activeCount * 4} rotis</strong>
                   </div>
-                  <div className="flex justify-between text-slate-300">
+                  <div className="flex justify-between text-[var(--text-secondary)]">
                     <span>Dal batches:</span>
-                    <strong className="font-mono text-emerald-400">5 large containers</strong>
+                    <strong className="font-mono text-[var(--text-primary)]">5 large containers</strong>
                   </div>
-                  <div className="flex justify-between text-slate-300">
-                    <span>Sweet / Gulab Jamun count:</span>
-                    <strong className="font-mono text-emerald-400">{activeCount} pieces</strong>
+                  <div className="flex justify-between text-[var(--text-secondary)]">
+                    <span>Accompaniments:</span>
+                    <strong className="font-mono text-[var(--text-primary)]">{activeCount} containers</strong>
                   </div>
                 </div>
               </div>
 
-              <div className="kds-card p-6 rounded-xl space-y-4">
-                <h3 className="text-lg font-bold text-rose-400 flex items-center gap-2">
+              <div className="kds-card space-y-4">
+                <h3 className="text-sm font-bold text-[var(--color-paused)] uppercase tracking-wider flex items-center gap-2">
                   ⚠️ CRITICAL DIETARY & ALLERGY ALERTS ({activeList.filter(c => c.dietary_notes).length})
                 </h3>
-                <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                   {activeList.filter(c => c.dietary_notes).map(c => (
-                    <div key={c.id} className="p-3 rounded-lg bg-rose-950/30 border border-rose-800/40 flex items-center justify-between">
+                    <div key={c.id} className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-between">
                       <div>
-                        <div className="font-bold text-slate-200 text-sm">{c.name} <span className="text-xs font-normal text-slate-400">({c.locality})</span></div>
-                        <div className="text-xs text-rose-400 font-semibold mt-0.5">⚠️ {c.dietary_notes}</div>
+                        <div className="font-bold text-[var(--text-primary)] text-xs">{c.name} <span className="text-[11px] font-normal text-[var(--text-muted)]">({c.locality})</span></div>
+                        <div className="text-xs text-[var(--color-paused)] font-semibold mt-0.5">⚠️ {c.dietary_notes}</div>
                       </div>
-                      <span className="text-xs font-mono font-bold px-2 py-1 rounded bg-slate-800 text-amber-400">
+                      <span className="badge-neutral">
                         {c.meal_type}
                       </span>
                     </div>
@@ -1223,26 +1239,26 @@ function App() {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-[var(--text-primary)]">🛵 Driver Route & Dispatch Manifest</h2>
-                <p className="text-sm text-[var(--text-secondary)]">Lead Driver: <strong>Mukesh Saini</strong> • Auto-skips paused homes to save fuel</p>
+                <p className="text-sm text-[var(--text-secondary)]">Lead Driver: <strong>Mukesh Saini</strong> • Auto-skips paused homes</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs px-3 py-1.5 rounded-lg bg-[var(--color-emerald-glow)] text-[var(--color-emerald)] font-bold border border-emerald-500/30">
+                <span className="badge-active">
                   Total Active Stops: {activeCount}
                 </span>
-                <span className="text-xs px-3 py-1.5 rounded-lg bg-[var(--color-rose-glow)] text-[var(--color-rose)] font-bold border border-rose-500/30">
+                <span className="badge-paused">
                   Skipped Paused: {pausedCount}
                 </span>
               </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-5">
               {Object.entries(driverClusters).map(([locality, stops]) => (
-                <div key={locality} className="glass-card p-6 space-y-4">
-                  <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+                <div key={locality} className="glass-card p-5 space-y-3">
+                  <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">📍</span>
-                      <h3 className="text-lg font-bold text-[var(--text-primary)]">{locality} Sector</h3>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-color)] font-bold text-[var(--color-amber)]">
+                      <span className="text-lg">📍</span>
+                      <h3 className="text-base font-bold text-[var(--text-primary)]">{locality} Sector</h3>
+                      <span className="badge-neutral">
                         {stops.length} Drops
                       </span>
                     </div>
@@ -1250,60 +1266,55 @@ function App() {
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${locality}, Jaipur`)}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs font-bold text-blue-500 hover:underline flex items-center gap-1"
+                      className="text-xs font-semibold text-[var(--color-brand)] hover:underline flex items-center gap-1"
                     >
-                      🗺️ Open Cluster in Google Maps →
+                      🗺️ Google Maps →
                     </a>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-3.5">
                     {stops.map(stop => {
                       const currStatus = deliveryStatuses[stop.subscription_id] || 'PENDING';
                       const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${stop.address}, Jaipur`)}`;
 
                       return (
-                        <div key={stop.id} className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-sm">
+                        <div key={stop.id} className="p-3.5 rounded-xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] space-y-2.5">
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <h4 className="font-bold text-[var(--text-primary)] text-base">{stop.name}</h4>
+                              <h4 className="font-bold text-[var(--text-primary)] text-sm">{stop.name}</h4>
                               <p className="text-xs text-[var(--text-secondary)] mt-0.5">📍 {stop.address}</p>
-                              <p className="text-xs font-mono text-[var(--color-amber)] font-bold mt-1">📞 {stop.phone}</p>
+                              <p className="text-xs font-mono text-[var(--color-brand)] font-semibold mt-0.5">📞 {stop.phone}</p>
                             </div>
-                            <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full ${
-                              currStatus === 'DELIVERED' ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/30' :
-                              currStatus === 'DOORBELL_RUNG' ? 'bg-amber-500/20 text-amber-600 border border-amber-500/30' :
-                              currStatus === 'FAILED' ? 'bg-rose-500/20 text-rose-600 border border-rose-500/30' :
-                              'bg-slate-500/10 text-slate-500 border border-slate-500/20'
-                            }`}>
+                            <span className={currStatus === 'DELIVERED' ? 'badge-active' : currStatus === 'DOORBELL_RUNG' ? 'badge-brand' : 'badge-neutral'}>
                               {currStatus}
                             </span>
                           </div>
 
                           <div className="flex items-center justify-between text-xs text-[var(--text-muted)] pt-1 border-t border-[var(--border-color)]">
                             <span>Meal: <strong className="text-[var(--text-primary)]">{stop.meal_type}</strong></span>
-                            {stop.dietary_notes && <span className="text-[var(--color-amber)] font-medium">⚠️ {stop.dietary_notes}</span>}
+                            {stop.dietary_notes && <span className="text-[var(--color-brand)] font-medium">⚠️ {stop.dietary_notes}</span>}
                           </div>
 
-                          <div className="flex items-center justify-between gap-2 pt-2">
+                          <div className="flex items-center justify-between gap-2 pt-1">
                             <a
                               href={mapsUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1 text-blue-500 font-bold border-blue-500/30"
+                              className="btn-secondary text-xs px-2.5 py-1"
                             >
-                              🧭 Navigate (1-Tap)
+                              🧭 Navigate
                             </a>
 
                             <div className="flex gap-1.5">
                               <button
                                 onClick={() => handleDriverStatus(stop.subscription_id, 'DOORBELL_RUNG')}
-                                className="px-2.5 py-1.5 rounded-lg text-xs bg-amber-500/10 text-amber-600 font-bold border border-amber-500/30 hover:bg-amber-500/20"
+                                className="btn-secondary text-xs px-2.5 py-1"
                               >
                                 🔔 Rung
                               </button>
                               <button
                                 onClick={() => handleDriverStatus(stop.subscription_id, 'DELIVERED')}
-                                className="px-2.5 py-1.5 rounded-lg text-xs bg-emerald-500/15 text-emerald-600 font-bold border border-emerald-500/30 hover:bg-emerald-500/25"
+                                className="btn-secondary text-xs px-2.5 py-1 text-[var(--color-active)]"
                               >
                                 ✅ Delivered
                               </button>
@@ -1321,23 +1332,23 @@ function App() {
 
         {/* TAB 6: WHATSAPP BOT SIMULATOR */}
         {activeTab === 'whatsapp' && (
-          <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-[var(--text-primary)]">💬 Meta WhatsApp Cloud API Bot Simulator</h2>
-              <p className="text-xs text-[var(--text-secondary)]">Simulates incoming webhook commands to <code>POST /api/webhooks/whatsapp</code></p>
+          <div className="max-w-xl mx-auto space-y-5 animate-fade-in">
+            <div className="text-center space-y-1.5">
+              <h2 className="text-2xl font-bold text-[var(--text-primary)]">💬 WhatsApp Cloud API Bot Simulator</h2>
+              <p className="text-xs text-[var(--text-secondary)]">Simulates customer bot webhooks at <code>POST /api/webhooks/whatsapp</code></p>
             </div>
 
-            <div className="glass-card border-2 border-[var(--border-color)] rounded-3xl overflow-hidden shadow-2xl">
-              <div className="bg-emerald-700 text-white p-4 flex items-center justify-between">
+            <div className="glass-card border border-[var(--border-color)] rounded-2xl overflow-hidden shadow-lg">
+              <div className="bg-emerald-700 text-white p-3.5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">
+                  <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-lg">
                     🍱
                   </div>
                   <div>
                     <div className="font-bold text-sm">Rajeshwar Tiffin Bot</div>
                     <div className="text-[11px] text-emerald-100 flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                      Online • Verified Business API
+                      Online • Verified API
                     </div>
                   </div>
                 </div>
@@ -1346,9 +1357,9 @@ function App() {
                 </div>
               </div>
 
-              <div className="p-4 space-y-3 bg-[var(--bg-primary)] min-h-[380px] max-h-[420px] overflow-y-auto">
+              <div className="p-4 space-y-3 bg-[var(--bg-primary)] min-h-[340px] max-h-[380px] overflow-y-auto">
                 <div className="text-center">
-                  <span className="text-[10px] uppercase font-bold px-3 py-1 rounded-full bg-slate-500/10 text-[var(--text-muted)]">
+                  <span className="badge-neutral text-[10px]">
                     Messages are end-to-end encrypted
                   </span>
                 </div>
@@ -1366,16 +1377,16 @@ function App() {
               </div>
 
               <div className="p-2.5 bg-[var(--bg-surface)] border-t border-[var(--border-color)] flex gap-2 overflow-x-auto">
-                <button onClick={() => handleSendWhatsAppMessage('MENU')} className="px-3 py-1 rounded-full text-xs bg-amber-500/15 text-[var(--color-amber)] font-bold border border-amber-500/30 whitespace-nowrap">
+                <button onClick={() => handleSendWhatsAppMessage('MENU')} className="btn-secondary text-xs px-3 py-1">
                   🍲 MENU
                 </button>
-                <button onClick={() => handleSendWhatsAppMessage('PAUSE 2026-09-21 2026-09-25')} className="px-3 py-1 rounded-full text-xs bg-rose-500/15 text-[var(--color-rose)] font-bold border border-rose-500/30 whitespace-nowrap">
+                <button onClick={() => handleSendWhatsAppMessage('PAUSE 2026-09-21 2026-09-25')} className="btn-secondary text-xs px-3 py-1 text-[var(--color-paused)]">
                   ⏸️ PAUSE Next Week
                 </button>
-                <button onClick={() => handleSendWhatsAppMessage('RESUME')} className="px-3 py-1 rounded-full text-xs bg-emerald-500/15 text-[var(--color-emerald)] font-bold border border-emerald-500/30 whitespace-nowrap">
-                  ▶️ RESUME Delivery
+                <button onClick={() => handleSendWhatsAppMessage('RESUME')} className="btn-secondary text-xs px-3 py-1 text-[var(--color-active)]">
+                  ▶️ RESUME
                 </button>
-                <button onClick={() => handleSendWhatsAppMessage('BILL')} className="px-3 py-1 rounded-full text-xs bg-blue-500/15 text-blue-600 font-bold border border-blue-500/30 whitespace-nowrap">
+                <button onClick={() => handleSendWhatsAppMessage('BILL')} className="btn-secondary text-xs px-3 py-1">
                   💳 Check BILL
                 </button>
               </div>
@@ -1404,12 +1415,12 @@ function App() {
                 <h2 className="text-2xl font-bold text-[var(--text-primary)]">🛡️ Enterprise Immutable Audit Logs</h2>
                 <p className="text-sm text-[var(--text-secondary)]">Tracks every pause change, cutoff lock, and delivery status with IP timestamps</p>
               </div>
-              <div className="text-xs px-3 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)]">
-                Audit Records: <strong>{auditLogs.length} events logged</strong>
+              <div className="badge-neutral text-xs py-1.5 px-3">
+                Events Logged: <strong>{auditLogs.length}</strong>
               </div>
             </div>
 
-            <div className="glass-card p-6 overflow-x-auto">
+            <div className="glass-card p-5 overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-[var(--border-color)] text-[var(--text-muted)]">
@@ -1426,11 +1437,11 @@ function App() {
                       <td className="py-3 font-mono text-[var(--text-secondary)] whitespace-nowrap">{log.timestamp}</td>
                       <td className="py-3">
                         <strong className="text-[var(--text-primary)]">{log.actor_name}</strong>
-                        <span className="text-[10px] ml-1.5 px-1.5 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-color)] uppercase font-bold text-[var(--color-amber)]">
+                        <span className="badge-neutral ml-1.5 text-[10px]">
                           {log.actor_role}
                         </span>
                       </td>
-                      <td className="py-3 font-mono font-bold text-[var(--color-emerald)]">{log.action}</td>
+                      <td className="py-3 font-mono font-bold text-[var(--color-brand)]">{log.action}</td>
                       <td className="py-3 text-[var(--text-secondary)]">{log.details}</td>
                       <td className="py-3 font-mono text-[var(--text-muted)]">{log.ip_address}</td>
                     </tr>
@@ -1448,20 +1459,20 @@ function App() {
           -------------------------------------------------------------------- */}
       {outboxModal && (
         <div className="modal-overlay">
-          <div className="modal-container max-w-3xl w-full p-6 space-y-4 animate-fade-in">
+          <div className="modal-container max-w-2xl p-6 space-y-4 animate-fade-in">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl">⏰</span>
                 <div>
                   <h3 className="text-xl font-bold text-[var(--text-primary)]">Morning Delivery Notification Outbox</h3>
-                  <p className="text-xs text-[var(--text-secondary)]">Graded via <code>/outbox</code> after <code>POST /clock</code> • Notifies active, weekday, non-paused subscribers</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Graded via <code>/outbox</code> after <code>POST /clock</code> • Weekday active subscribers only</p>
                 </div>
               </div>
               <button onClick={() => setOutboxModal(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] font-bold text-lg">✕</button>
             </div>
 
             {/* Clock Trigger Controls */}
-            <div className="bg-[var(--bg-surface)] p-4 rounded-xl border border-[var(--border-color)] flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="p-3.5 rounded-xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <label className="text-xs font-bold text-[var(--text-muted)] whitespace-nowrap">Clock Date:</label>
                 <input
@@ -1478,7 +1489,7 @@ function App() {
               <div className="flex gap-2 w-full sm:w-auto justify-end">
                 <button
                   onClick={handleClearOutbox}
-                  className="btn-secondary text-xs px-3 py-2 text-rose-600 border-rose-500/30"
+                  className="btn-secondary text-xs px-3 py-2 text-[var(--color-paused)]"
                 >
                   Clear Outbox
                 </button>
@@ -1497,17 +1508,17 @@ function App() {
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
                 <span>Queued Outbox Feed: <strong>{outboxNotifications.length} notifications</strong></span>
-                <span className="text-[11px] text-[var(--color-emerald)] font-semibold">Channel: WhatsApp Cloud API</span>
+                <span className="text-[11px] text-[var(--color-active)] font-semibold">Channel: WhatsApp Cloud API</span>
               </div>
 
               {outboxNotifications.length === 0 ? (
-                <div className="p-8 text-center border-2 border-dashed border-[var(--border-color)] rounded-xl space-y-2">
+                <div className="p-8 text-center border border-dashed border-[var(--border-color)] rounded-xl space-y-2">
                   <span className="text-3xl">📭</span>
                   <div className="text-sm font-bold text-[var(--text-primary)]">Outbox is empty for {clockDate}</div>
                   <p className="text-xs text-[var(--text-secondary)]">Click "Advance Clock (POST /clock)" to evaluate active subscribers and generate morning messages.</p>
                 </div>
               ) : (
-                <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+                <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
                   {outboxNotifications.map((item, idx) => (
                     <div key={item.id || idx} className="outbox-card">
                       <div className="flex items-center justify-between mb-1.5">
@@ -1515,7 +1526,7 @@ function App() {
                           <strong className="text-[var(--text-primary)] text-sm">{item.recipient_name}</strong>
                           <span className="font-mono text-xs text-[var(--text-muted)]">({item.recipient_phone})</span>
                         </div>
-                        <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full badge-active">
+                        <span className="badge-active">
                           {item.status || 'SENT'}
                         </span>
                       </div>
@@ -1554,20 +1565,20 @@ function App() {
 
         return (
           <div className="modal-overlay">
-            <div className="modal-container max-w-2xl w-full p-6 space-y-4 animate-fade-in">
+            <div className="modal-container max-w-2xl p-6 space-y-4 animate-fade-in">
               <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
                 <div className="flex items-center gap-2.5">
                   <span className="text-2xl">🔄</span>
                   <div>
                     <h3 className="text-xl font-bold text-[var(--text-primary)]">Mid-Cycle Subscription Transfer</h3>
-                    <p className="text-xs text-[var(--text-secondary)]">Plan & cycle carry over • Billing mathematically splits according to who was served</p>
+                    <p className="text-xs text-[var(--text-secondary)]">Plan & cycle carry over • Billing mathematically splits by who was served</p>
                   </div>
                 </div>
                 <button onClick={() => setTransferModal(null)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] font-bold text-lg">✕</button>
               </div>
 
               {/* Original Plan Details */}
-              <div className="p-3.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-between text-xs">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] flex items-center justify-between text-xs">
                 <div>
                   <span className="text-[var(--text-muted)] block text-[10px] uppercase font-bold">Original Subscriber A:</span>
                   <strong className="text-[var(--text-primary)] text-sm">{transferModal.name}</strong>
@@ -1575,7 +1586,7 @@ function App() {
                 </div>
                 <div className="text-right">
                   <span className="text-[var(--text-muted)] block text-[10px] uppercase font-bold">Carried-Over Plan:</span>
-                  <strong className="text-[var(--color-amber)]">{transferModal.plan_name}</strong>
+                  <strong className="text-[var(--color-brand)]">{transferModal.plan_name}</strong>
                   <span className="text-[var(--text-secondary)] ml-1">₹{transferModal.monthly_price}/mo</span>
                 </div>
               </div>
@@ -1628,7 +1639,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* SIDE-BY-SIDE SPLIT BILLING BREAKDOWN */}
+                {/* SIDE-BY-SIDE SPLIT BILLING BREAKDOWN (Unified Cards) */}
                 <div className="pt-2">
                   <span className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider block mb-2">
                     🧮 Exact Pro-Rated Billing Split (Sept 2026):
@@ -1636,10 +1647,10 @@ function App() {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     {/* Customer A Box */}
-                    <div className="split-card-a space-y-2">
-                      <div className="flex items-center justify-between border-b border-amber-500/20 pb-1.5">
-                        <strong className="text-[var(--color-amber)]">Original: {transferModal.name}</strong>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10">Sept 1 to {transferDate}</span>
+                    <div className="split-box space-y-2">
+                      <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-1.5">
+                        <strong className="text-[var(--text-primary)]">Original: {transferModal.name}</strong>
+                        <span className="badge-neutral font-mono">Sept 1 to {transferDate}</span>
                       </div>
                       <div className="space-y-1 text-[var(--text-secondary)]">
                         <div className="flex justify-between">
@@ -1654,7 +1665,7 @@ function App() {
                           <span>Daily Plan Rate:</span>
                           <span className="font-mono">₹{split.dailyRate}</span>
                         </div>
-                        <div className="flex justify-between pt-1 border-t border-amber-500/20 font-bold text-[var(--color-amber)] text-sm">
+                        <div className="flex justify-between pt-1 border-t border-[var(--border-color)] font-bold text-[var(--color-brand)] text-sm">
                           <span>Payable (+5% GST):</span>
                           <span>₹{split.customerA.finalAmount}</span>
                         </div>
@@ -1662,10 +1673,10 @@ function App() {
                     </div>
 
                     {/* Customer B Box */}
-                    <div className="split-card-b space-y-2">
-                      <div className="flex items-center justify-between border-b border-emerald-500/20 pb-1.5">
-                        <strong className="text-[var(--color-emerald)]">Recipient: {transferTargetName}</strong>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10">{transferDate} to Sept 30</span>
+                    <div className="split-box space-y-2">
+                      <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-1.5">
+                        <strong className="text-[var(--text-primary)]">Recipient: {transferTargetName}</strong>
+                        <span className="badge-neutral font-mono">{transferDate} to Sept 30</span>
                       </div>
                       <div className="space-y-1 text-[var(--text-secondary)]">
                         <div className="flex justify-between">
@@ -1680,7 +1691,7 @@ function App() {
                           <span>Daily Plan Rate:</span>
                           <span className="font-mono">₹{split.dailyRate}</span>
                         </div>
-                        <div className="flex justify-between pt-1 border-t border-emerald-500/20 font-bold text-[var(--color-emerald)] text-sm">
+                        <div className="flex justify-between pt-1 border-t border-[var(--border-color)] font-bold text-[var(--color-brand)] text-sm">
                           <span>Payable (+5% GST):</span>
                           <span>₹{split.customerB.finalAmount}</span>
                         </div>
@@ -1688,12 +1699,12 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="mt-2.5 p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] flex justify-between items-center text-xs">
+                  <div className="mt-2.5 p-2 rounded-lg bg-[var(--bg-card-hover)] border border-[var(--border-color)] flex justify-between items-center text-xs">
                     <span className="text-[var(--text-muted)]">
-                      Total Cycle Weekdays: <strong>{split.totalServedDays} days served</strong> ({split.customerA.daysServed} + {split.customerB.daysServed})
+                      Total Cycle: <strong>{split.totalServedDays} days served</strong> ({split.customerA.daysServed} + {split.customerB.daysServed})
                     </span>
                     <span className="font-bold text-[var(--text-primary)]">
-                      Combined Cycle Total: ₹{split.totalBilledAmount}
+                      Combined Total: ₹{split.totalBilledAmount}
                     </span>
                   </div>
                 </div>
@@ -1703,7 +1714,7 @@ function App() {
                     Cancel
                   </button>
                   <button type="submit" className="btn-primary text-xs px-5 py-2">
-                    ✓ Confirm Mid-Cycle Transfer
+                    ✓ Confirm Transfer
                   </button>
                 </div>
               </form>
@@ -1717,7 +1728,7 @@ function App() {
           -------------------------------------------------------------------- */}
       {importModal && (
         <div className="modal-overlay">
-          <div className="modal-container max-w-3xl w-full p-6 space-y-4 animate-fade-in">
+          <div className="modal-container max-w-2xl p-6 space-y-4 animate-fade-in">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl">📥</span>
@@ -1730,25 +1741,25 @@ function App() {
             </div>
 
             {/* Benchmark Preset Button */}
-            <div className="flex items-center justify-between bg-[var(--bg-surface)] p-3 rounded-xl border border-[var(--border-color)] text-xs">
+            <div className="flex items-center justify-between bg-[var(--bg-card-hover)] p-3 rounded-xl border border-[var(--border-color)] text-xs">
               <div>
                 <strong className="text-[var(--text-primary)]">Official Grader Benchmark Dataset:</strong>
-                <p className="text-[var(--text-muted)]">Contains mixed dates (DD/MM/YYYY, ISO, textual), dupes, and blanks</p>
+                <p className="text-[var(--text-muted)]">Contains mixed dates, dupes, and corrupt rows</p>
               </div>
               <button
                 type="button"
                 onClick={handleLoadMessyPreset}
-                className="btn-secondary text-xs px-3 py-1.5 font-bold text-[var(--color-amber)] border-amber-500/30"
+                className="btn-secondary text-xs px-3 py-1.5"
               >
-                ⚡ Load Sample Messy Data
+                ⚡ Load Sample Data
               </button>
             </div>
 
             {/* Input Data Textarea */}
             <div>
-              <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Customer Payload (JSON Array or CSV)</label>
+              <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Customer Payload (JSON Array)</label>
               <textarea
-                rows={7}
+                rows={6}
                 value={importDataText}
                 onChange={(e) => setImportDataText(e.target.value)}
                 placeholder='[{"name": "Kavita Joshi", "phone": "9828877665", "start_date": "2026-09-01"}]'
@@ -1763,10 +1774,10 @@ function App() {
                 type="button"
                 disabled={importLoading || !importDataText.trim()}
                 onClick={handleExecuteImport}
-                className="btn-primary text-xs px-5 py-2.5 flex items-center gap-1.5"
+                className="btn-primary text-xs px-5 py-2 flex items-center gap-1.5"
               >
                 <span>{importLoading ? '⏳' : '⚡'}</span>
-                <span>Clean, Deduplicate & Import Now</span>
+                <span>Clean & Import Now</span>
               </button>
             </div>
 
@@ -1774,41 +1785,41 @@ function App() {
             {importReport && (
               <div className="space-y-3 pt-2 border-t border-[var(--border-color)] animate-fade-in">
                 <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="stat-card-imported">
-                    <span className="text-xs font-bold text-emerald-600 block uppercase">Cleanly Imported</span>
-                    <div className="text-3xl font-black text-emerald-600 mt-1">{importReport.imported}</div>
-                    <span className="text-[11px] text-[var(--text-muted)]">Active subscriptions</span>
+                  <div className="stat-box-imported">
+                    <span className="text-xs font-bold text-[var(--color-active)] block uppercase">Imported</span>
+                    <div className="text-3xl font-black text-[var(--color-active)] mt-1">{importReport.imported}</div>
+                    <span className="text-[11px] text-[var(--text-muted)]">Active subscribers</span>
                   </div>
-                  <div className="stat-card-deduped">
-                    <span className="text-xs font-bold text-amber-600 block uppercase">Deduplicated</span>
-                    <div className="text-3xl font-black text-amber-600 mt-1">{importReport.deduped}</div>
+                  <div className="stat-box-deduped">
+                    <span className="text-xs font-bold text-[var(--color-brand)] block uppercase">Deduplicated</span>
+                    <div className="text-3xl font-black text-[var(--color-brand)] mt-1">{importReport.deduped}</div>
                     <span className="text-[11px] text-[var(--text-muted)]">Merged duplicate phones</span>
                   </div>
-                  <div className="stat-card-rejected">
-                    <span className="text-xs font-bold text-rose-600 block uppercase">Rejected</span>
-                    <div className="text-3xl font-black text-rose-600 mt-1">{importReport.rejected}</div>
-                    <span className="text-[11px] text-[var(--text-muted)]">Missing / corrupt data</span>
+                  <div className="stat-box-rejected">
+                    <span className="text-xs font-bold text-[var(--color-paused)] block uppercase">Rejected</span>
+                    <div className="text-3xl font-black text-[var(--color-paused)] mt-1">{importReport.rejected}</div>
+                    <span className="text-[11px] text-[var(--text-muted)]">Corrupt / blank rows</span>
                   </div>
                 </div>
 
                 {/* Details Breakdown */}
                 {importReport.details && (
-                  <div className="max-h-48 overflow-y-auto p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] text-xs space-y-2">
-                    <span className="font-bold text-[var(--text-primary)] block">Processing Details Audit:</span>
+                  <div className="max-h-40 overflow-y-auto p-3 rounded-xl bg-[var(--bg-card-hover)] border border-[var(--border-color)] text-xs space-y-1.5">
+                    <span className="font-bold text-[var(--text-primary)] block">Audit Breakdown:</span>
                     {importReport.details.imported?.map((item, i) => (
-                      <div key={i} className="flex justify-between text-emerald-600">
+                      <div key={i} className="flex justify-between text-[var(--color-active)]">
                         <span>✅ Imported: {item.name} ({item.phone})</span>
                         <span className="font-mono">{item.start_date}</span>
                       </div>
                     ))}
                     {importReport.details.deduped?.map((item, i) => (
-                      <div key={i} className="flex justify-between text-amber-600">
+                      <div key={i} className="flex justify-between text-[var(--color-brand)]">
                         <span>⚠️ Deduped: {item.record?.name || item.name} ({item.phone})</span>
                         <span>{item.reason}</span>
                       </div>
                     ))}
                     {importReport.details.rejected?.map((item, i) => (
-                      <div key={i} className="flex justify-between text-rose-600">
+                      <div key={i} className="flex justify-between text-[var(--color-paused)]">
                         <span>❌ Rejected: {item.record?.name || '(Missing Name)'}</span>
                         <span>{item.reason}</span>
                       </div>
@@ -1832,7 +1843,7 @@ function App() {
           -------------------------------------------------------------------- */}
       {pauseModal && (
         <div className="modal-overlay">
-          <div className="modal-container max-w-md w-full p-6 space-y-4 animate-fade-in">
+          <div className="modal-container max-w-md p-6 space-y-4 animate-fade-in">
             <button onClick={() => setPauseModal(null)} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-primary)]">✕</button>
             <h3 className="text-xl font-bold text-[var(--text-primary)]">Pause Subscription</h3>
             <p className="text-xs text-[var(--text-secondary)]">For <strong>{pauseModal.name}</strong> ({pauseModal.phone})</p>
@@ -1848,7 +1859,7 @@ function App() {
                     form.endDate.value = '2026-09-18';
                     form.reason.value = 'Friday Leave';
                   }} 
-                  className="text-xs px-2.5 py-1 rounded bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--color-amber)]"
+                  className="btn-secondary text-xs px-2.5 py-1"
                 >
                   Tomorrow (1 Day)
                 </button>
@@ -1860,7 +1871,7 @@ function App() {
                     form.endDate.value = '2026-09-25';
                     form.reason.value = 'Full Week Travel';
                   }} 
-                  className="text-xs px-2.5 py-1 rounded bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--color-amber)]"
+                  className="btn-secondary text-xs px-2.5 py-1"
                 >
                   Next Week (5 Days)
                 </button>
@@ -1874,24 +1885,24 @@ function App() {
             }} className="space-y-3 pt-2">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[var(--text-muted)] block mb-1">Start Date</label>
-                  <input name="startDate" type="date" defaultValue="2026-09-14" required className="input-control w-full text-xs" />
+                  <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Start Date</label>
+                  <input name="startDate" type="date" defaultValue="2026-09-14" required className="input-control w-full text-xs font-mono" />
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--text-muted)] block mb-1">End Date</label>
-                  <input name="endDate" type="date" defaultValue="2026-09-18" required className="input-control w-full text-xs" />
+                  <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">End Date</label>
+                  <input name="endDate" type="date" defaultValue="2026-09-18" required className="input-control w-full text-xs font-mono" />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-[var(--text-muted)] block mb-1">Reason for Leave</label>
+                <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Reason for Leave</label>
                 <input name="reason" type="text" defaultValue="Diwali Festival / Vacation" required className="input-control w-full text-xs" />
               </div>
-              <div className="text-[11px] text-[var(--color-amber)] bg-[var(--color-amber-glow)] p-2.5 rounded-lg border border-[var(--color-amber)]">
+              <div className="text-[11px] text-[var(--color-brand)] bg-[var(--color-brand-glow)] p-2.5 rounded-lg border border-[var(--border-focus)]">
                 💡 Strict 9:00 AM Cutoff: Requests after 9:00 AM lock same-day cooking and apply from next business day.
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setPauseModal(null)} className="btn-secondary text-xs px-4 py-2">Cancel</button>
-                <button type="submit" className="btn-primary text-xs px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white">Confirm Pause</button>
+                <button type="submit" className="btn-primary text-xs px-4 py-2">Confirm Pause</button>
               </div>
             </form>
           </div>
@@ -1908,17 +1919,17 @@ function App() {
 
         return (
           <div className="modal-overlay">
-            <div className="modal-container max-w-2xl w-full p-6 space-y-4 animate-fade-in">
+            <div className="modal-container max-w-2xl p-6 space-y-4 animate-fade-in">
               <button onClick={() => setBillModal(null)} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-primary)]">✕</button>
               
               <div className="border-b border-[var(--border-color)] pb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-[var(--color-amber)]">
+                    <span className="badge-brand">
                       OFFICIAL TAX INVOICE
                     </span>
                     <h3 className="text-xl font-bold text-[var(--text-primary)] mt-1">Rajeshwar Annapurna Tiffin Kitchens</h3>
-                    <p className="text-xs text-[var(--text-secondary)]">GSTIN: <strong>08AABCR1234F1Z5</strong> • HSN/SAC Code: <strong>996331</strong> (Outdoor Catering)</p>
+                    <p className="text-xs text-[var(--text-secondary)]">GSTIN: <strong>08AABCR1234F1Z5</strong> • SAC: <strong>996331</strong> (Outdoor Catering)</p>
                   </div>
                   <div className="text-right">
                     <span className="text-xs font-mono font-bold text-[var(--text-muted)]">INV-2026-09-{String(billModal.id).padStart(3, '0')}</span>
@@ -1931,30 +1942,30 @@ function App() {
               </div>
 
               {/* Mathematical Pro-Rating Proof Box */}
-              <div className="bg-[var(--bg-surface)] p-4 rounded-xl border border-amber-500/40 space-y-3 shadow-sm">
-                <span className="text-[11px] font-bold text-[var(--color-amber)] uppercase tracking-wider block">
+              <div className="bg-[var(--bg-card-hover)] p-4 rounded-xl border border-[var(--border-color)] space-y-3">
+                <span className="text-[11px] font-bold text-[var(--color-brand)] uppercase tracking-wider block">
                   Mathematical Pro-Rating Proof
                 </span>
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-2 text-center text-xs">
-                  <div className="p-2 rounded bg-[var(--bg-card-hover)]">
+                  <div className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-color)]">
                     <div className="text-[var(--text-muted)]">Monthly Plan</div>
                     <div className="font-bold text-[var(--text-primary)] text-sm">₹{billModal.monthly_price}</div>
                   </div>
-                  <div className="p-2 rounded bg-[var(--bg-card-hover)]">
+                  <div className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-color)]">
                     <div className="text-[var(--text-muted)]">Weekdays</div>
                     <div className="font-bold text-[var(--text-primary)] text-sm">{math.totalWeekdays}</div>
                   </div>
-                  <div className="p-2 rounded bg-[var(--bg-card-hover)]">
+                  <div className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-color)]">
                     <div className="text-[var(--text-muted)]">Daily Rate</div>
-                    <div className="font-bold text-[var(--color-amber)] text-sm">₹{math.dailyRate}</div>
+                    <div className="font-bold text-[var(--color-brand)] text-sm">₹{math.dailyRate}</div>
                   </div>
-                  <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/30">
-                    <div className="text-[var(--color-emerald)] font-semibold">Delivered</div>
-                    <div className="font-bold text-[var(--color-emerald)] text-sm">{math.deliveredWeekdays} days</div>
+                  <div className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                    <div className="text-[var(--color-active)] font-semibold">Delivered</div>
+                    <div className="font-bold text-[var(--color-active)] text-sm">{math.deliveredWeekdays} days</div>
                   </div>
-                  <div className="p-2 rounded bg-rose-500/10 border border-rose-500/30">
-                    <div className="text-[var(--color-rose)] font-semibold">Paused</div>
-                    <div className="font-bold text-[var(--color-rose)] text-sm">{math.pausedWeekdays} days</div>
+                  <div className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-color)]">
+                    <div className="text-[var(--color-paused)] font-semibold">Paused</div>
+                    <div className="font-bold text-[var(--color-paused)] text-sm">{math.pausedWeekdays} days</div>
                   </div>
                 </div>
 
@@ -1976,13 +1987,13 @@ function App() {
                 <div className="flex justify-between items-center pt-3 border-t border-[var(--border-color)]">
                   <div>
                     {math.savings > 0 && (
-                      <div className="text-xs text-[var(--color-emerald)] font-bold">🎉 Customer saved ₹{math.savings} on paused days!</div>
+                      <div className="text-xs text-[var(--color-active)] font-bold">🎉 Customer saved ₹{math.savings} on paused days!</div>
                     )}
                     <span className="text-[11px] text-[var(--text-muted)]">Billed strictly for weekdays actually served.</span>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] uppercase text-[var(--text-muted)] font-bold">Final Total Payable</span>
-                    <div className="text-3xl font-black text-[var(--color-amber)]">₹{math.finalAmount}</div>
+                    <div className="text-3xl font-black text-[var(--color-brand)]">₹{math.finalAmount}</div>
                   </div>
                 </div>
               </div>
@@ -1992,7 +2003,7 @@ function App() {
                 <h4 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">Itemized Day-by-Day Calendar (Sept 2026)</h4>
                 <div className="max-h-40 overflow-y-auto border border-[var(--border-color)] rounded-xl">
                   <table className="w-full text-xs text-left">
-                    <thead className="bg-[var(--bg-surface)] sticky top-0 border-b border-[var(--border-color)] text-[var(--text-muted)]">
+                    <thead className="bg-[var(--bg-card-hover)] sticky top-0 border-b border-[var(--border-color)] text-[var(--text-muted)]">
                       <tr>
                         <th className="p-2">Date</th>
                         <th className="p-2">Day</th>
@@ -2007,8 +2018,8 @@ function App() {
                           <td className="p-2 text-[var(--text-primary)] font-mono">{d.date}</td>
                           <td className="p-2 text-[var(--text-secondary)]">{d.dayName}</td>
                           <td className="p-2">
-                            {d.status === 'DELIVERED' && <span className="text-[var(--color-emerald)] font-semibold">Delivered</span>}
-                            {d.status === 'PAUSED' && <span className="text-[var(--color-rose)] font-semibold">Paused</span>}
+                            {d.status === 'DELIVERED' && <span className="text-[var(--color-active)] font-semibold">Delivered</span>}
+                            {d.status === 'PAUSED' && <span className="text-[var(--color-paused)] font-semibold">Paused</span>}
                             {d.status === 'WEEKEND' && <span className="text-[var(--text-muted)]">Weekend</span>}
                           </td>
                           <td className="p-2 text-[var(--text-secondary)]">{d.reason || (d.status === 'DELIVERED' ? 'Lunch Served' : '-')}</td>
@@ -2029,9 +2040,9 @@ function App() {
                     href={whatsappLink} 
                     target="_blank" 
                     rel="noreferrer"
-                    className="btn-primary text-xs px-3.5 py-2 flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    className="btn-primary text-xs px-3.5 py-2 flex items-center gap-1.5"
                   >
-                    📲 Send Tax Invoice on WhatsApp
+                    📲 Share on WhatsApp
                   </a>
                   <button 
                     onClick={() => {
@@ -2057,7 +2068,7 @@ function App() {
           -------------------------------------------------------------------- */}
       {newSubModal && (
         <div className="modal-overlay">
-          <div className="modal-container max-w-md w-full p-6 space-y-4 animate-fade-in">
+          <div className="modal-container max-w-md p-6 space-y-4 animate-fade-in">
             <button onClick={() => setNewSubModal(false)} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-primary)]">✕</button>
             <h3 className="text-xl font-bold text-[var(--text-primary)]">Add New Subscriber</h3>
 
@@ -2082,25 +2093,25 @@ function App() {
               });
             }} className="space-y-3">
               <div>
-                <label className="text-xs text-[var(--text-muted)] block mb-1">Full Name</label>
+                <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Full Name</label>
                 <input name="fullName" required placeholder="e.g. Yash Sharma" className="input-control w-full text-xs" />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs text-[var(--text-muted)] block mb-1">Phone Number</label>
-                  <input name="phone" required placeholder="e.g. 9829911223" className="input-control w-full text-xs" />
+                  <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Phone Number</label>
+                  <input name="phone" required placeholder="e.g. 9829911223" className="input-control w-full text-xs font-mono" />
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--text-muted)] block mb-1">Locality / Area</label>
+                  <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Locality / Area</label>
                   <input name="locality" required placeholder="e.g. Malviya Nagar" className="input-control w-full text-xs" />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-[var(--text-muted)] block mb-1">Delivery Address</label>
+                <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Delivery Address</label>
                 <input name="address" required placeholder="Flat 101, Mansarovar, Jaipur" className="input-control w-full text-xs" />
               </div>
               <div>
-                <label className="text-xs text-[var(--text-muted)] block mb-1">Dietary Notes</label>
+                <label className="text-xs text-[var(--text-muted)] block mb-1 font-bold">Dietary Notes</label>
                 <input name="notes" placeholder="e.g. Less spicy, pure satvik" className="input-control w-full text-xs" />
               </div>
               <div className="flex justify-end gap-2 pt-2">
